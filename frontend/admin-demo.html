@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PepNationRX - Admin Dashboard Demo</title>
+
+  <!-- Foundational design tokens, then the admin component styles. -->
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/components/admin.css" />
+
+  <style>
+    /* Demo-page chrome only. Production pages will use the shared shell. */
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background: var(--color-bg);
+      color: var(--color-text-primary);
+      font-family: var(--font-sans);
+    }
+
+    .demo {
+      max-width: var(--layout-max-width);
+      margin: 0 auto;
+      padding: var(--space-7) var(--layout-gutter) var(--space-9);
+    }
+
+    .demo__brand {
+      margin: 0 0 var(--space-6);
+      text-align: center;
+      font-size: var(--text-sm);
+      font-weight: var(--weight-medium);
+      letter-spacing: var(--tracking-wide);
+      text-transform: uppercase;
+      color: var(--teal-500);
+    }
+  </style>
+</head>
+<body>
+  <main class="demo">
+    <p class="demo__brand">PepNationRX</p>
+
+    <pnrx-admin-dashboard mode="demo"></pnrx-admin-dashboard>
+  </main>
+
+  <script type="module">
+    // Importing the component registers the <pnrx-admin-dashboard> element.
+    import './js/components/pnrx-admin-dashboard.js';
+
+    // Feed the component a sample payload. In production it fetches the
+    // staff-gated /api/admin endpoints itself.
+    const admin = document.querySelector('pnrx-admin-dashboard');
+    admin.renderData(
+      {
+        summary: {
+          liveMrrCents: 1842300,
+          settledGrossCents: 5273900,
+          settledTransactionCount: 218,
+          openIntakeCount: 14,
+        },
+        usersByRole: [
+          { role: 'patient', count: 612 },
+          { role: 'provider', count: 9 },
+          { role: 'pharmacist', count: 4 },
+          { role: 'affiliate', count: 23 },
+          { role: 'admin', count: 2 },
+          { role: 'support', count: 5 },
+        ],
+        subscriptionsByStatus: [
+          { status: 'active', count: 341 },
+          { status: 'pending_clinical_review', count: 18 },
+          { status: 'past_due', count: 12 },
+          { status: 'paused', count: 7 },
+          { status: 'canceled', count: 44 },
+        ],
+      },
+      [
+        {
+          id: 9001,
+          action: 'checkout.placed',
+          actor_role: 'patient',
+          entity_type: 'subscription',
+          phi_accessed: false,
+          occurred_at: '2026-05-22T15:04:00.000Z',
+        },
+        {
+          id: 9000,
+          action: 'intake.submitted',
+          actor_role: 'patient',
+          entity_type: 'intake_submission',
+          phi_accessed: true,
+          occurred_at: '2026-05-22T14:51:00.000Z',
+        },
+      ]
+    );
+  </script>
+</body>
+</html>

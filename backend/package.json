@@ -1,0 +1,28 @@
+{
+  "name": "pepnationrx-backend",
+  "version": "0.2.0",
+  "private": true,
+  "description": "PepNationRX telemedicine MSO platform - Node.js / Express API",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test \"tests/**/*.test.js\""
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.4.1",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.13.1",
+    "zod": "^3.24.1"
+  }
+}

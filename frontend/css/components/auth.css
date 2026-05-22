@@ -1,0 +1,204 @@
+/* ============================================================================
+   PEPNATIONRX.COM - AUTH COMPONENT STYLES
+   File: frontend/css/components/auth.css
+   ----------------------------------------------------------------------------
+   Styles the <pnrx-auth> Web Component: the sign-in and registration card.
+   Every value references a token from css/variables.css.
+   ============================================================================ */
+
+pnrx-auth {
+  display: block;
+  font-family: var(--font-sans);
+  color: var(--color-text-primary);
+}
+
+.pnrx-auth {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-4) var(--space-2);
+}
+
+.pnrx-auth__card {
+  width: 100%;
+  max-width: 460px;
+  padding: var(--space-6);
+  background: var(--color-surface);
+  border: var(--border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--elev-4), var(--bevel-raised);
+}
+
+.pnrx-auth__title {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+  color: var(--white-soft);
+}
+
+.pnrx-auth__sub {
+  margin: 0 0 var(--space-5);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: var(--leading-base);
+}
+
+/* -- Fields ----------------------------------------------------------------- */
+.pnrx-auth__row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+}
+
+@media (min-width: 480px) {
+  .pnrx-auth__row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.pnrx-auth__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
+}
+
+.pnrx-auth__field label {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-secondary);
+}
+
+.pnrx-auth__field input {
+  padding: var(--space-3);
+  font-family: var(--font-sans);
+  font-size: var(--text-md);
+  color: var(--color-text-primary);
+  background: var(--color-surface-recessed);
+  border: var(--border-hairline);
+  border-radius: var(--radius-md);
+  box-shadow: var(--bevel-inset);
+  transition: border-color var(--duration-fast) var(--ease-standard);
+}
+
+.pnrx-auth__field input:focus {
+  outline: none;
+  border-color: var(--color-focus-ring);
+  box-shadow: var(--bevel-inset), var(--glow-teal-soft);
+}
+
+.pnrx-auth__hint {
+  margin: calc(var(--space-2) * -1) 0 var(--space-4);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+/* -- Registration acknowledgements ------------------------------------------ */
+.pnrx-auth__acks {
+  margin: var(--space-3) 0 var(--space-4);
+  padding: var(--space-4);
+  background: var(--color-surface-recessed);
+  border: var(--border-hairline);
+  border-radius: var(--radius-md);
+}
+
+.pnrx-auth__acks-title {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--white-soft);
+}
+
+.pnrx-auth__ack {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  margin-bottom: var(--space-3);
+  font-size: var(--text-sm);
+  line-height: var(--leading-base);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.pnrx-auth__ack:last-child {
+  margin-bottom: 0;
+}
+
+.pnrx-auth__ack input {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+}
+
+/* -- Error ------------------------------------------------------------------ */
+.pnrx-auth__error {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+  background: var(--color-surface-recessed);
+  border: var(--edge-blue);
+  border-radius: var(--radius-md);
+}
+
+/* -- Call to action --------------------------------------------------------- */
+.pnrx-auth__cta {
+  width: 100%;
+  margin-top: var(--space-2);
+  padding: var(--space-4);
+  font-family: var(--font-sans);
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-inverse);
+  background: var(--metal-rail);
+  border: var(--edge-teal);
+  border-radius: var(--radius-md);
+  box-shadow: var(--elev-2), var(--glow-teal-soft);
+  cursor: pointer;
+  transition: box-shadow var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
+}
+
+.pnrx-auth__cta:hover:not(:disabled) {
+  box-shadow: var(--elev-3), var(--glow-teal);
+  transform: translateY(-1px);
+}
+
+.pnrx-auth__cta:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: var(--bevel-inset);
+}
+
+.pnrx-auth__cta:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: var(--elev-1);
+}
+
+/* -- Mode switch ------------------------------------------------------------ */
+.pnrx-auth__switch {
+  margin: var(--space-4) 0 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.pnrx-auth__link {
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-accent);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.pnrx-auth__link:hover {
+  color: var(--teal-600);
+}

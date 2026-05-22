@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PepNationRX - Checkout Demo</title>
+
+  <!-- Foundational design tokens, then the checkout component styles. -->
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/components/checkout.css" />
+
+  <style>
+    /* Demo-page chrome only. Production pages will use the shared shell. */
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background: var(--color-bg);
+      color: var(--color-text-primary);
+      font-family: var(--font-sans);
+    }
+
+    .demo {
+      max-width: var(--layout-max-width);
+      margin: 0 auto;
+      padding: var(--space-7) var(--layout-gutter) var(--space-9);
+    }
+
+    .demo__brand {
+      margin: 0 0 var(--space-6);
+      text-align: center;
+      font-size: var(--text-sm);
+      font-weight: var(--weight-medium);
+      letter-spacing: var(--tracking-wide);
+      text-transform: uppercase;
+      color: var(--teal-500);
+    }
+
+    .demo__output {
+      max-width: 720px;
+      margin: var(--space-6) auto 0;
+      padding: var(--space-4);
+      background: var(--color-surface-recessed);
+      border: var(--border-hairline);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--bevel-inset);
+    }
+
+    .demo__output h2 {
+      margin: 0 0 var(--space-3);
+      font-size: var(--text-lg);
+      font-weight: var(--weight-medium);
+      color: var(--teal-500);
+    }
+
+    .demo__payload {
+      margin: 0;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: var(--text-sm);
+      line-height: var(--leading-base);
+      color: var(--color-text-primary);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+  </style>
+</head>
+<body>
+  <main class="demo">
+    <p class="demo__brand">PepNationRX</p>
+
+    <pnrx-checkout></pnrx-checkout>
+
+    <section class="demo__output" id="output" hidden>
+      <h2>Checkout Event</h2>
+      <pre class="demo__payload" id="payload"></pre>
+    </section>
+  </main>
+
+  <script type="module">
+    // Importing the component registers the <pnrx-checkout> custom element.
+    import './js/components/pnrx-checkout.js';
+
+    // Hand the component a sample plan selection. A production host passes the
+    // selection carried by the pnrx-catalog "catalog:select" event.
+    const checkout = document.querySelector('pnrx-checkout');
+    checkout.configure({
+      protocolCategory: 'peptide_therapy',
+      planName: '3-Month Plan',
+      treatmentName: 'Peptide Recovery Protocol',
+      treatmentSlug: 'peptide-recovery-protocol',
+      cadenceMonths: 3,
+      pricePerMonthCents: 19900,
+    });
+
+    // Surface the checkout result a host would route to the patient dashboard.
+    function showEvent(label, detail) {
+      const output = document.getElementById('output');
+      output.hidden = false;
+      document.getElementById('payload').textContent =
+        label + '\n\n' + JSON.stringify(detail, null, 2);
+      output.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    checkout.addEventListener('checkout:complete', function (event) {
+      showEvent('checkout:complete', event.detail);
+    });
+    checkout.addEventListener('checkout:error', function (event) {
+      showEvent('checkout:error', event.detail);
+    });
+  </script>
+</body>
+</html>

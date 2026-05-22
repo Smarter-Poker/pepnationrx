@@ -1,0 +1,289 @@
+/* ============================================================================
+   PEPNATIONRX.COM - FOUNDATIONAL DESIGN TOKENS
+   File: frontend/css/variables.css
+   ----------------------------------------------------------------------------
+   Single source of truth for the "futuristic metal" interface system.
+   Every token is derived mathematically so the system stays internally
+   consistent and can be re-tuned from a small set of base constants.
+
+   PALETTE CONSTRAINT (hard): Black, Silver Grey, White, Teal, Blue only.
+   No other hues are permitted anywhere in the application.
+   ============================================================================ */
+
+:root {
+
+  /* ==========================================================================
+     1. BASE CONSTANTS
+     The whole system scales from these primitives.
+     ========================================================================== */
+  --base-unit: 8px;            /* spacing atom */
+  --type-base: 1rem;           /* 16px root font size */
+  --type-ratio: 1.250;         /* major third modular scale */
+  --elevation-ratio: 1.7;      /* exponential growth of shadow depth */
+  --radius-base: 6px;
+
+  /* ==========================================================================
+     2. COLOR PRIMITIVES
+     Each ramp steps in even, perceptual lightness increments so tints and
+     shades are predictable. HSL is used so the math is visible.
+     ========================================================================== */
+
+  /* -- Black ramp (000 = pure floor, 500 = surface ceiling) ---------------- */
+  --black-000: hsl(216, 36%,  2%);   /* app background floor   */
+  --black-100: hsl(215, 32%,  5%);   /* base canvas            */
+  --black-200: hsl(214, 30%,  8%);   /* recessed panel         */
+  --black-300: hsl(213, 28%, 11%);   /* card / surface         */
+  --black-400: hsl(213, 26%, 15%);   /* raised surface         */
+  --black-500: hsl(212, 24%, 19%);   /* elevated surface       */
+
+  /* -- Silver Grey ramp (brushed-metal mid tones to bright highlight) ------- */
+  --silver-100: hsl(213, 12%, 26%);  /* metal shadow edge      */
+  --silver-200: hsl(213, 11%, 38%);  /* metal body low         */
+  --silver-300: hsl(214, 12%, 52%);  /* metal body mid         */
+  --silver-400: hsl(214, 14%, 66%);  /* metal body high        */
+  --silver-500: hsl(215, 18%, 78%);  /* metal highlight        */
+  --silver-600: hsl(216, 24%, 88%);  /* specular highlight     */
+
+  /* -- White ---------------------------------------------------------------- */
+  --white:      hsl(0, 0%, 100%);
+  --white-soft: hsl(214, 30%, 96%);  /* primary text on dark   */
+
+  /* -- Teal ramp (primary neon accent) ------------------------------------- */
+  --teal-300: hsl(174, 90%, 38%);    /* deep teal              */
+  --teal-400: hsl(174, 95%, 46%);    /* core teal              */
+  --teal-500: hsl(173, 100%, 55%);   /* neon teal (default)    */
+  --teal-600: hsl(172, 100%, 68%);   /* teal highlight         */
+
+  /* -- Blue ramp (secondary neon accent) ----------------------------------- */
+  --blue-300: hsl(217, 88%, 44%);    /* deep blue              */
+  --blue-400: hsl(216, 95%, 56%);    /* core blue              */
+  --blue-500: hsl(214, 100%, 64%);   /* neon blue (default)    */
+  --blue-600: hsl(212, 100%, 75%);   /* blue highlight         */
+
+  /* ==========================================================================
+     3. SEMANTIC COLOR ROLES
+     Components reference these, never the primitives directly.
+     ========================================================================== */
+  --color-bg:               var(--black-000);
+  --color-bg-canvas:        var(--black-100);
+  --color-surface:          var(--black-300);
+  --color-surface-raised:   var(--black-400);
+  --color-surface-elevated: var(--black-500);
+  --color-surface-recessed: var(--black-200);
+
+  --color-border:           hsl(214, 18%, 22%);
+  --color-border-strong:    hsl(214, 16%, 32%);
+  --color-divider:          hsl(214, 20%, 14%);
+
+  --color-text-primary:     var(--white-soft);
+  --color-text-secondary:   var(--silver-400);
+  --color-text-muted:       var(--silver-300);
+  --color-text-inverse:     var(--black-000);
+
+  --color-accent:           var(--teal-500);
+  --color-accent-strong:    var(--teal-400);
+  --color-accent-2:         var(--blue-500);
+  --color-accent-2-strong:  var(--blue-400);
+
+  --color-focus-ring:       var(--teal-500);
+  --color-alert:            var(--blue-500); /* alerts use the Blue accent */
+  --color-success:          var(--teal-500);
+
+  /* ==========================================================================
+     4. BRUSHED METAL FINISHES
+     Layered gradients that simulate a machined silver-grey surface. The
+     repeating-linear-gradient supplies the fine brushed grain; the linear
+     gradient supplies the vertical light falloff.
+     ========================================================================== */
+  --metal-grain:
+    repeating-linear-gradient(
+      90deg,
+      hsla(214, 16%, 70%, 0.00) 0px,
+      hsla(214, 16%, 70%, 0.05) 1px,
+      hsla(214, 30%, 12%, 0.05) 2px,
+      hsla(214, 16%, 70%, 0.00) 3px
+    );
+
+  --metal-panel:
+    linear-gradient(
+      180deg,
+      var(--silver-300) 0%,
+      var(--silver-200) 38%,
+      var(--silver-100) 72%,
+      var(--black-400)  100%
+    );
+
+  --metal-rail:
+    linear-gradient(
+      180deg,
+      var(--silver-500) 0%,
+      var(--silver-300) 18%,
+      var(--silver-100) 50%,
+      var(--silver-300) 82%,
+      var(--silver-500) 100%
+    );
+
+  --metal-dark-panel:
+    linear-gradient(
+      165deg,
+      var(--black-500) 0%,
+      var(--black-300) 55%,
+      var(--black-200) 100%
+    );
+
+  /* Full brushed surface = grain layered over the dark panel gradient. */
+  --metal-surface: var(--metal-grain), var(--metal-dark-panel);
+
+  /* ==========================================================================
+     5. 3D DEPTH / ELEVATION
+     Elevation N blur and offset grow by --elevation-ratio ^ N. Each token is a
+     two-layer shadow: an ambient cast plus a tighter contact shadow. A top
+     inset highlight and bottom inset shade give the machined-bevel read.
+     ========================================================================== */
+  --elev-0: none;
+
+  --elev-1:
+    0 1px 2px hsla(216, 50%, 1%, 0.55),
+    0 1px 1px hsla(216, 50%, 1%, 0.40);
+
+  --elev-2:
+    0 3px 6px hsla(216, 50%, 1%, 0.55),
+    0 2px 3px hsla(216, 50%, 1%, 0.42);
+
+  --elev-3:
+    0 7px 14px hsla(216, 50%, 1%, 0.58),
+    0 3px 6px  hsla(216, 50%, 1%, 0.45);
+
+  --elev-4:
+    0 14px 28px hsla(216, 55%, 1%, 0.60),
+    0 6px 10px  hsla(216, 55%, 1%, 0.48);
+
+  --elev-5:
+    0 26px 52px hsla(216, 60%, 1%, 0.64),
+    0 10px 18px hsla(216, 60%, 1%, 0.50);
+
+  --elev-6:
+    0 44px 88px hsla(216, 65%, 1%, 0.70),
+    0 18px 30px hsla(216, 65%, 1%, 0.54);
+
+  /* Machined bevel: bright top inner edge, dark bottom inner edge. */
+  --bevel-raised:
+    inset 0 1px 0 hsla(216, 30%, 90%, 0.14),
+    inset 0 -1px 0 hsla(216, 60%, 1%, 0.55);
+
+  /* Pressed / recessed state: inverts the bevel. */
+  --bevel-inset:
+    inset 0 2px 4px hsla(216, 60%, 1%, 0.65),
+    inset 0 -1px 0 hsla(216, 30%, 90%, 0.06);
+
+  /* ==========================================================================
+     6. NEON GLOW
+     Edge-light accents. --glow-* are box-shadow ready; --glow-text-* are for
+     drop-shadow() / text-shadow on glowing labels.
+     ========================================================================== */
+  --glow-teal:
+    0 0 4px  hsla(173, 100%, 55%, 0.55),
+    0 0 12px hsla(173, 100%, 55%, 0.40),
+    0 0 28px hsla(173, 100%, 55%, 0.22);
+
+  --glow-blue:
+    0 0 4px  hsla(214, 100%, 64%, 0.55),
+    0 0 12px hsla(214, 100%, 64%, 0.40),
+    0 0 28px hsla(214, 100%, 64%, 0.22);
+
+  --glow-teal-soft:  0 0 10px hsla(173, 100%, 55%, 0.28);
+  --glow-blue-soft:  0 0 10px hsla(214, 100%, 64%, 0.28);
+
+  --glow-text-teal:  0 0 8px hsla(173, 100%, 55%, 0.65);
+  --glow-text-blue:  0 0 8px hsla(214, 100%, 64%, 0.65);
+
+  /* Hairline neon edge for active borders. */
+  --edge-teal: 1px solid hsla(173, 100%, 55%, 0.70);
+  --edge-blue: 1px solid hsla(214, 100%, 64%, 0.70);
+
+  /* ==========================================================================
+     7. SPACING SCALE  (multiples of --base-unit)
+     ========================================================================== */
+  --space-0: 0;
+  --space-1: calc(var(--base-unit) * 0.5);   /*  4px */
+  --space-2: var(--base-unit);               /*  8px */
+  --space-3: calc(var(--base-unit) * 1.5);   /* 12px */
+  --space-4: calc(var(--base-unit) * 2);     /* 16px */
+  --space-5: calc(var(--base-unit) * 3);     /* 24px */
+  --space-6: calc(var(--base-unit) * 4);     /* 32px */
+  --space-7: calc(var(--base-unit) * 6);     /* 48px */
+  --space-8: calc(var(--base-unit) * 8);     /* 64px */
+  --space-9: calc(var(--base-unit) * 12);    /* 96px */
+
+  /* ==========================================================================
+     8. TYPOGRAPHY SCALE  (geometric, ratio = --type-ratio)
+     step(n) = --type-base * ratio^n
+     ========================================================================== */
+  --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", ui-monospace, monospace;
+
+  --text-xs:   calc(var(--type-base) / var(--type-ratio));            /* 0.800rem */
+  --text-sm:   calc(var(--type-base) / 1.125);                        /* 0.889rem */
+  --text-md:   var(--type-base);                                      /* 1.000rem */
+  --text-lg:   calc(var(--type-base) * var(--type-ratio));            /* 1.250rem */
+  --text-xl:   calc(var(--type-base) * var(--type-ratio) * var(--type-ratio));         /* 1.563rem */
+  --text-2xl:  calc(var(--type-base) * var(--type-ratio) * var(--type-ratio) * var(--type-ratio));   /* 1.953rem */
+  --text-3xl:  calc(var(--type-base) * var(--type-ratio) * var(--type-ratio) * var(--type-ratio) * var(--type-ratio)); /* 2.441rem */
+
+  --weight-regular: 400;
+  --weight-medium:  500;
+  --weight-bold:    700;
+
+  --leading-tight: 1.2;
+  --leading-base:  1.55;
+  --tracking-wide: 0.08em;
+
+  /* ==========================================================================
+     9. RADII  (radius(n) = --radius-base * n)
+     ========================================================================== */
+  --radius-sm:   calc(var(--radius-base) * 0.66);   /*  4px */
+  --radius-md:   var(--radius-base);                /*  6px */
+  --radius-lg:   calc(var(--radius-base) * 1.66);   /* 10px */
+  --radius-xl:   calc(var(--radius-base) * 2.66);   /* 16px */
+  --radius-pill: 999px;
+
+  /* ==========================================================================
+     10. BORDERS
+     ========================================================================== */
+  --border-hairline: 1px solid var(--color-border);
+  --border-strong:   1px solid var(--color-border-strong);
+  --border-metal:    1px solid var(--silver-100);
+
+  /* ==========================================================================
+     11. MOTION
+     ========================================================================== */
+  --ease-standard:  cubic-bezier(0.4, 0.0, 0.2, 1);
+  --ease-emphasis:  cubic-bezier(0.2, 0.0, 0.0, 1);
+  --duration-fast:  120ms;
+  --duration-base:  220ms;
+  --duration-slow:  400ms;
+
+  /* ==========================================================================
+     12. LAYOUT + Z-INDEX
+     ========================================================================== */
+  --layout-max-width: 1280px;
+  --layout-gutter:    var(--space-5);
+
+  --z-base:    0;
+  --z-raised:  10;
+  --z-sticky:  100;
+  --z-overlay: 1000;
+  --z-modal:   1100;
+  --z-toast:   1200;
+}
+
+/* ----------------------------------------------------------------------------
+   Reduced-motion preference: collapse all durations.
+   ---------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 1ms;
+    --duration-base: 1ms;
+    --duration-slow: 1ms;
+  }
+}

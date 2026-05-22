@@ -1,0 +1,276 @@
+// ============================================================================
+// pnrx-app-shell - the PepNationRX application shell.
+// ----------------------------------------------------------------------------
+// The single-page application frame. It owns the persistent header and footer,
+// the hash router, and the route outlet, and it wires the cross-component
+// flow: a catalog selection opens the triage intake, a completed intake opens
+// checkout, and a completed checkout opens the patient dashboard.
+//
+// The footer carries the mandatory MSO billing-agent disclosure. It must not
+// be removed: PepNationRX is the designated billing agent, not the provider
+// or pharmacy, and that disclosure is shown on every screen.
+// ============================================================================
+
+'use strict';
+
+import { createRouter } from '../core/router.js';
+import { isAuthenticated, getUser, subscribe } from '../store/session.js';
+import { restoreSession, logout } from '../services/auth.service.js';
+import { submitIntake } from '../services/intake.service.js';
+import { showToast } from '../utils/toast.js';
+
+// The mandatory MSO billing-agent disclosure. Kept identical to the backend
+// constants module and ARCHITECTURE.md Section V.
+const MSO_DISCLOSURE =
+  'PepNationRX is a technology platform and management services organization. ' +
+  'We do not provide medical advice or care. All clinical services are ' +
+  'provided by independent, licensed medical practitioners. All compounded ' +
+  'medications are fulfilled by licensed, independent 503A compounding ' +
+  'pharmacies. PepNationRX acts solely as the designated billing agent.';
+
+// Importing the feature components registers their custom elements so the
+// router can create them by tag name.
+import './pnrx-catalog.js';
+import './pnrx-triage-form.js';
+import './pnrx-checkout.js';
+import './pnrx-patient-dashboard.js';
+import './pnrx-affiliate-dashboard.js';
+import './pnrx-admin-dashboard.js';
+import './pnrx-auth.js';
+
+// Roles permitted to reach the admin dashboard.
+const STAFF_ROLES = ['admin', 'support'];
+
+export class PnrxAppShell extends HTMLElement {
+  constructor() {
+    super();
+    // The plan a visitor chose in the catalog, carried through intake to
+    // checkout. Null until a catalog selection is made.
+    this.pendingSelection = null;
+    this.router = null;
+    this.unsubscribe = null;
+  }
+
+  connectedCallback() {
+    this.innerHTML =
+      '<div class="pnrx-shell">' +
+      '<header class="pnrx-shell__header">' +
+      '<a class="pnrx-shell__brand" href="#/catalog">PepNationRX</a>' +
+      '<nav class="pnrx-shell__nav" id="pnrx-shell-nav"></nav>' +
+      '</header>' +
+      '<main class="pnrx-shell__outlet" id="pnrx-shell-outlet"></main>' +
+      '<footer class="pnrx-shell__footer">' +
+      '<p class="pnrx-shell__disclosure">' + MSO_DISCLOSURE + '</p>' +
+      '<p class="pnrx-shell__copyright">PepNationRX. Telehealth Services ' +
+      'Provided By Independent Licensed Providers.</p>' +
+      '</footer>' +
+      '</div>';
+
+    this.outlet = this.querySelector('#pnrx-shell-outlet');
+    this.navEl = this.querySelector('#pnrx-shell-nav');
+
+    this.router = createRouter({
+      outlet: this.outlet,
+      fallback: '/catalog',
+      routes: this.buildRoutes(),
+      onChange: this.renderNav.bind(this),
+    });
+
+    // Re-render the nav whenever the session changes.
+    this.unsubscribe = subscribe(this.renderNav.bind(this));
+
+    this.bindFlowEvents();
+    this.renderNav();
+
+    // Restore a session from the refresh-token cookie, then start routing.
+    restoreSession().finally(
+      function () {
+        this.router.start();
+      }.bind(this)
+    );
+  }
+
+  disconnectedCallback() {
+    if (this.router) this.router.stop();
+    if (this.unsubscribe) this.unsubscribe();
+  }
+
+  // -- Routing ---------------------------------------------------------------
+
+  buildRoutes() {
+    const self = this;
+    return {
+      '/catalog': function () {
+        return document.createElement('pnrx-catalog');
+      },
+      '/intake': function () {
+        return document.createElement('pnrx-triage-form');
+      },
+      '/checkout': function () {
+        const el = document.createElement('pnrx-checkout');
+        if (self.pendingSelection) {
+          el.configure(self.pendingSelection);
+        }
+        return el;
+      },
+      '/dashboard': function () {
+        if (!isAuthenticated()) {
+          self.router.navigate('/login');
+          return self.requireSignInNotice();
+        }
+        return document.createElement('pnrx-patient-dashboard');
+      },
+      '/affiliate': function () {
+        if (!isAuthenticated()) {
+          self.router.navigate('/login');
+          return self.requireSignInNotice();
+        }
+        return document.createElement('pnrx-affiliate-dashboard');
+      },
+      '/admin': function () {
+        const user = getUser();
+        if (!isAuthenticated()) {
+          self.router.navigate('/login');
+          return self.requireSignInNotice();
+        }
+        if (!user || STAFF_ROLES.indexOf(user.role) === -1) {
+          const div = document.createElement('div');
+          div.className = 'pnrx-shell__notice';
+          div.textContent = 'This Area Is Restricted To Staff Accounts.';
+          return div;
+        }
+        return document.createElement('pnrx-admin-dashboard');
+      },
+      '/login': function () {
+        const el = document.createElement('pnrx-auth');
+        el.setAttribute('mode', 'login');
+        return el;
+      },
+      '/register': function () {
+        const el = document.createElement('pnrx-auth');
+        el.setAttribute('mode', 'register');
+        return el;
+      },
+    };
+  }
+
+  // A placeholder shown for a heartbeat while an unauthenticated visitor is
+  // redirected to the sign-in screen.
+  requireSignInNotice() {
+    const div = document.createElement('div');
+    div.className = 'pnrx-shell__notice';
+    div.textContent = 'Please Sign In To Continue.';
+    return div;
+  }
+
+  // -- Cross-component flow --------------------------------------------------
+
+  bindFlowEvents() {
+    const self = this;
+
+    // A catalog selection carries a plan into the intake then checkout.
+    this.addEventListener('catalog:select', function (event) {
+      const d = event.detail || {};
+      const months = d.planCadenceMonths || 1;
+      self.pendingSelection = {
+        protocolCategory: d.protocolCategory || null,
+        planName: months === 1 ? 'Monthly' : months + '-Month Plan',
+        treatmentName: d.treatmentName || '',
+        treatmentSlug: d.treatmentSlug || '',
+        cadenceMonths: months,
+        pricePerMonthCents: d.planPriceCents || 0,
+      };
+      self.router.navigate('/intake');
+    });
+
+    // A completed intake is persisted to the backend so a provider can review
+    // it, then advances to checkout when a plan was selected. The intake is
+    // saved only for a signed-in patient; an anonymous visitor is routed
+    // onward and will create an account before checkout. A save failure is
+    // surfaced but does not block navigation.
+    this.addEventListener('triage:submit', function (event) {
+      const detail = event.detail || {};
+      const proceed = function () {
+        self.router.navigate(self.pendingSelection ? '/checkout' : '/dashboard');
+      };
+      if (!isAuthenticated()) {
+        proceed();
+        return;
+      }
+      submitIntake(detail)
+        .then(function (result) {
+          if (self.pendingSelection && result && result.submission) {
+            self.pendingSelection.intakeSubmissionId = result.submission.id;
+          }
+        })
+        .catch(function () {
+          showToast('Your Intake Could Not Be Saved. Please Try Again.', 'error');
+        })
+        .finally(proceed);
+    });
+
+    // A completed checkout returns the patient to their dashboard.
+    this.addEventListener('checkout:complete', function () {
+      self.pendingSelection = null;
+      showToast(
+        'Order Received. A Provider Will Review Your Intake Shortly.',
+        'success'
+      );
+      self.router.navigate('/dashboard');
+    });
+
+    // A checkout error surfaces as a toast in addition to the inline message.
+    this.addEventListener('checkout:error', function (event) {
+      const detail = event.detail || {};
+      showToast(detail.message || 'Checkout Could Not Be Completed.', 'error');
+    });
+
+    // A successful sign-in or registration opens the patient dashboard.
+    this.addEventListener('auth:success', function () {
+      showToast('You Are Signed In.', 'success');
+      self.router.navigate('/dashboard');
+    });
+  }
+
+  // -- Header navigation -----------------------------------------------------
+
+  renderNav() {
+    const links = [
+      '<a class="pnrx-shell__link" href="#/catalog">Browse Treatments</a>',
+      '<a class="pnrx-shell__link" href="#/intake">Start Intake</a>',
+    ];
+    if (isAuthenticated()) {
+      const user = getUser();
+      const label =
+        user && user.first_name ? 'Hello, ' + user.first_name : 'My Dashboard';
+      links.push('<a class="pnrx-shell__link" href="#/dashboard">' + label + '</a>');
+      if (user && STAFF_ROLES.indexOf(user.role) !== -1) {
+        links.push(
+          '<a class="pnrx-shell__link" href="#/admin">Admin Console</a>'
+        );
+      }
+      links.push(
+        '<button type="button" class="pnrx-shell__signout" ' +
+          'data-action="signout">Sign Out</button>'
+      );
+    } else {
+      links.push('<a class="pnrx-shell__link" href="#/login">Sign In</a>');
+    }
+    this.navEl.innerHTML = links.join('');
+
+    const signout = this.navEl.querySelector('[data-action="signout"]');
+    if (signout) {
+      const self = this;
+      signout.addEventListener('click', function () {
+        logout().finally(function () {
+          self.router.navigate('/catalog');
+        });
+      });
+    }
+  }
+}
+
+// Register the custom element once.
+if (!customElements.get('pnrx-app-shell')) {
+  customElements.define('pnrx-app-shell', PnrxAppShell);
+}

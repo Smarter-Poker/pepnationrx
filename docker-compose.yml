@@ -1,0 +1,56 @@
+# ============================================================================
+# PepNationRX - local development stack.
+# ----------------------------------------------------------------------------
+# Brings up PostgreSQL and the API together for local development. On its first
+# start the database container applies the schema and the catalog migration
+# from database/. The secrets below are development placeholders only and must
+# never be used in a deployed environment.
+#
+# Usage:  docker compose up --build
+# ============================================================================
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: pepnationrx
+      POSTGRES_USER: pepnationrx
+      POSTGRES_PASSWORD: pepnationrx_dev
+    volumes:
+      - pnrx-db-data:/var/lib/postgresql/data
+      # Files in this directory run, in name order, on first initialization.
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/00-schema.sql:ro
+      - ./database/migrations/0001_treatment_catalog.sql:/docker-entrypoint-initdb.d/01-treatment-catalog.sql:ro
+      - ./database/migrations/0002_payout_idempotency.sql:/docker-entrypoint-initdb.d/02-payout-idempotency.sql:ro
+      - ./database/migrations/0003_catalog_seed.sql:/docker-entrypoint-initdb.d/03-catalog-seed.sql:ro
+      - ./database/migrations/0004_user_state.sql:/docker-entrypoint-initdb.d/04-user-state.sql:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pepnationrx -d pepnationrx"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: ./backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      PORT: 4000
+      PGHOST: db
+      PGPORT: 5432
+      PGDATABASE: pepnationrx
+      PGUSER: pepnationrx
+      PGPASSWORD: pepnationrx_dev
+      # Development-only placeholders. Replace with real secrets in production.
+      JWT_ACCESS_SECRET: dev-access-secret-change-me-000000000000
+      JWT_REFRESH_SECRET: dev-refresh-secret-change-me-11111111111
+      PHI_ENCRYPTION_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
+    ports:
+      - "4000:4000"
+
+volumes:
+  pnrx-db-data:

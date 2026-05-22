@@ -1,0 +1,70 @@
+'use strict';
+
+// ============================================================================
+// Monthly check-in model - data-access layer for the monthly_checkins table.
+// ----------------------------------------------------------------------------
+// A monthly check-in is the brief clinical form a patient must complete to
+// keep a recurring protocol authorized. The refill-reminders job schedules
+// these; a separate sweep marks overdue ones missed. answers_encrypted holds
+// PHI and is written encrypted by the patient-facing flow.
+// ============================================================================
+
+const { query, queryOne } = require('../db/query');
+
+const COLUMNS =
+  'id, user_id, subscription_id, prescription_id, status, due_date, ' +
+  'submitted_at, reviewed_at, created_at, updated_at';
+
+// Statuses that count as an open (not yet resolved) check-in.
+const OPEN_STATUSES = ['due', 'submitted'];
+
+// Insert a check-in in the 'due' state. dueDate is an ISO date string.
+async function create(data) {
+  return queryOne(
+    'INSERT INTO monthly_checkins ' +
+      '(user_id, subscription_id, prescription_id, status, due_date) ' +
+      "VALUES ($1, $2, $3, 'due', $4) " +
+      'RETURNING ' + COLUMNS,
+    [
+      data.userId,
+      data.subscriptionId,
+      data.prescriptionId || null,
+      data.dueDate,
+    ]
+  );
+}
+
+// Find a check-in by primary key.
+async function findById(id) {
+  return queryOne('SELECT ' + COLUMNS + ' FROM monthly_checkins WHERE id = $1', [id]);
+}
+
+// True when a subscription already has an open ('due' or 'submitted')
+// check-in. The refill-reminders job uses this to stay idempotent.
+async function hasOpenCheckin(subscriptionId) {
+  const row = await queryOne(
+    'SELECT 1 AS present FROM monthly_checkins ' +
+      'WHERE subscription_id = $1 AND status = ANY($2) LIMIT 1',
+    [subscriptionId, OPEN_STATUSES]
+  );
+  return row !== null;
+}
+
+// Mark every 'due' check-in whose due_date is before the cutoff as 'missed'.
+// Returns the number of rows updated.
+async function markOverdueMissed(cutoffDate) {
+  const result = await query(
+    "UPDATE monthly_checkins SET status = 'missed' " +
+      "WHERE status = 'due' AND due_date < $1",
+    [cutoffDate]
+  );
+  return result.rowCount;
+}
+
+module.exports = {
+  OPEN_STATUSES: OPEN_STATUSES,
+  create: create,
+  findById: findById,
+  hasOpenCheckin: hasOpenCheckin,
+  markOverdueMissed: markOverdueMissed,
+};

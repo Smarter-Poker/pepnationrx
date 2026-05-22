@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PepNationRX - Telehealth Platform</title>
+
+  <!-- Foundational design tokens, then every component stylesheet. -->
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/components/app-shell.css" />
+  <link rel="stylesheet" href="css/components/auth.css" />
+  <link rel="stylesheet" href="css/components/catalog.css" />
+  <link rel="stylesheet" href="css/components/triage-form.css" />
+  <link rel="stylesheet" href="css/components/checkout.css" />
+  <link rel="stylesheet" href="css/components/dashboard.css" />
+  <link rel="stylesheet" href="css/components/admin.css" />
+  <link rel="stylesheet" href="css/components/toast.css" />
+
+  <style>
+    /* The application owns the full viewport. The shell supplies its own
+       layout; this only resets the document. */
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background: var(--color-bg);
+      color: var(--color-text-primary);
+      font-family: var(--font-sans);
+    }
+  </style>
+</head>
+<body>
+  <!-- The application shell mounts the router, header, and footer. It imports
+       every feature component, so this single module is the only script the
+       page needs. -->
+  <pnrx-app-shell></pnrx-app-shell>
+
+  <script type="module" src="js/components/pnrx-app-shell.js"></script>
+</body>
+</html>

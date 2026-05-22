@@ -1,0 +1,57 @@
+/* ============================================================================
+   PEPNATIONRX.COM - TOAST NOTIFICATION STYLES
+   File: frontend/css/components/toast.css
+   ----------------------------------------------------------------------------
+   Styles the transient notifications created by js/utils/toast.js. Every value
+   references a token from css/variables.css; no raw colors are introduced.
+   ============================================================================ */
+
+.pnrx-toast-root {
+  position: fixed;
+  top: var(--space-4);
+  right: var(--space-4);
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-width: 360px;
+  pointer-events: none;
+}
+
+.pnrx-toast {
+  pointer-events: auto;
+  padding: var(--space-3) var(--space-4);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  line-height: var(--leading-base);
+  color: var(--color-text-primary);
+  background: var(--color-surface-elevated);
+  border: var(--border-hairline);
+  border-left: 3px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--elev-4);
+  cursor: pointer;
+  opacity: 0;
+  transform: translateX(16px);
+  transition: opacity var(--duration-base) var(--ease-standard),
+    transform var(--duration-base) var(--ease-standard);
+}
+
+.pnrx-toast.is-visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.pnrx-toast--success {
+  border-left-color: var(--color-accent);
+  box-shadow: var(--elev-4), var(--glow-teal-soft);
+}
+
+.pnrx-toast--error {
+  border-left-color: var(--color-accent-2);
+  box-shadow: var(--elev-4), var(--glow-blue-soft);
+}
+
+.pnrx-toast--info {
+  border-left-color: var(--silver-300);
+}
