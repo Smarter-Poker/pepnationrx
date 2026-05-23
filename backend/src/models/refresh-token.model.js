@@ -42,13 +42,17 @@ async function findByHash(tokenHash) {
 
 // Revoke a single token row by id (idempotent). An optional `client` runs the
 // update inside an open transaction alongside the replacement token insert.
+// Returns the number of rows changed: 1 when this call revoked a live token,
+// 0 when the token was already revoked. The 0 case is the atomic signal that
+// a concurrent request rotated the same token first (see auth.service.refresh).
 async function revokeById(id, client) {
-  await query(
+  const result = await query(
     'UPDATE refresh_tokens SET revoked_at = now() ' +
       'WHERE id = $1 AND revoked_at IS NULL',
     [id],
     client
   );
+  return result.rowCount;
 }
 
 // Revoke every live token for a user. Used on logout-all and on detected

@@ -35,8 +35,10 @@ async function findByEmailWithSecret(email) {
 }
 
 // Insert a new user. The caller supplies an already-hashed password. state is
-// a two-letter US state code, stored uppercased, or null.
-async function create(data) {
+// a two-letter US state code, stored uppercased, or null. An optional `client`
+// runs the insert inside an open transaction (registration pairs it with the
+// refresh-token insert so the two commit or roll back as one unit).
+async function create(data, client) {
   return queryOne(
     'INSERT INTO users ' +
       '(email, phone, password_hash, role, first_name, last_name, ' +
@@ -53,7 +55,8 @@ async function create(data) {
       data.dateOfBirth || null,
       data.sexAtBirth || null,
       data.state ? String(data.state).toUpperCase() : null,
-    ]
+    ],
+    client
   );
 }
 

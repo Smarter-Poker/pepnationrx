@@ -116,8 +116,14 @@ if (config.jwt.accessSecret && config.jwt.accessSecret === config.jwt.refreshSec
 }
 
 if (isProduction) {
-  const weak = ['replace-with-random-access-secret', 'replace-with-random-refresh-secret'];
-  if (weak.includes(config.jwt.accessSecret) || weak.includes(config.jwt.refreshSecret)) {
+  // Reject any secret that still looks like a template or placeholder value,
+  // not just the two exact strings from .env.example. This also catches the
+  // docker-compose development placeholders, which contain "change-me".
+  const placeholderPattern = /replace-with|change-me|changeme|placeholder|example/i;
+  if (
+    placeholderPattern.test(config.jwt.accessSecret) ||
+    placeholderPattern.test(config.jwt.refreshSecret)
+  ) {
     errors.push('JWT secrets still hold placeholder values in production.');
   }
   if (config.jwt.accessSecret.length < 32) {

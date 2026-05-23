@@ -20,9 +20,14 @@ const userModel = require('../models/user.model');
 const refreshTokenModel = require('../models/refresh-token.model');
 const audit = require('./audit.service');
 
-// A fixed bcrypt hash compared against when an email is not found, so a
-// missing account and a wrong password take indistinguishable time.
-const DUMMY_HASH = '$2b$12$0000000000000000000000000000000000000000000000000000a';
+// A real bcrypt hash compared against when an email is not found, so a missing
+// account and a wrong password take indistinguishable time. It is generated at
+// load from a throwaway value: a hand-written hash literal risks being
+// malformed, which makes bcrypt.compare throw and breaks the timing guarantee.
+const DUMMY_HASH = bcrypt.hashSync(
+  'pepnationrx-timing-equalizer',
+  config.security.bcryptRounds
+);
 
 // Strip the secret column before a user object leaves the service.
 function toPublicUser(row) {
@@ -71,19 +76,27 @@ async function register(input, requestMeta) {
 
   const passwordHash = await bcrypt.hash(input.password, config.security.bcryptRounds);
 
-  const user = await userModel.create({
-    email: input.email,
-    phone: input.phone,
-    passwordHash: passwordHash,
-    role: 'patient',
-    firstName: input.firstName,
-    lastName: input.lastName,
-    dateOfBirth: input.dateOfBirth,
-    sexAtBirth: input.sexAtBirth,
-    state: input.state,
+  // Create the account and issue its first session on one transaction: a
+  // failure issuing tokens rolls the user insert back rather than leaving an
+  // orphaned account that can never be registered again.
+  const { user, tokens } = await withTransaction(async (client) => {
+    const created = await userModel.create(
+      {
+        email: input.email,
+        phone: input.phone,
+        passwordHash: passwordHash,
+        role: 'patient',
+        firstName: input.firstName,
+        lastName: input.lastName,
+        dateOfBirth: input.dateOfBirth,
+        sexAtBirth: input.sexAtBirth,
+        state: input.state,
+      },
+      client
+    );
+    const issued = await issueTokenPair(created, requestMeta, client);
+    return { user: created, tokens: issued };
   });
-
-  const tokens = await issueTokenPair(user, requestMeta);
 
   await audit.record({
     actorUserId: user.id,
@@ -196,13 +209,32 @@ async function refresh(refreshToken, requestMeta) {
     throw errors.forbidden('This account is not permitted to refresh a session.');
   }
 
-  // Revoke the old token and issue the new pair atomically: both writes run
-  // on the transaction's client, so a crash between them rolls the revoke back
-  // rather than stranding the user with no usable refresh token.
-  const tokens = await withTransaction(async (client) => {
-    await refreshTokenModel.revokeById(stored.id, client);
-    return issueTokenPair(user, requestMeta, client);
+  // Revoke the old token and issue the new pair on one transaction. revokeById
+  // only updates a still-live row, so a 0 row count means a concurrent request
+  // already rotated this exact token between the revoked_at check above and
+  // now - that is reuse of a single-use token, so the family is compromised.
+  const rotation = await withTransaction(async (client) => {
+    const revokedCount = await refreshTokenModel.revokeById(stored.id, client);
+    if (revokedCount === 0) {
+      return { reuse: true };
+    }
+    const issued = await issueTokenPair(user, requestMeta, client);
+    return { tokens: issued };
   });
+
+  if (rotation.reuse) {
+    await refreshTokenModel.revokeAllForUser(stored.user_id);
+    await audit.record({
+      actorUserId: stored.user_id,
+      action: AUDIT_ACTIONS.TOKEN_REUSE_DETECTED,
+      entityType: 'refresh_token',
+      entityId: stored.id,
+      ipAddress: requestMeta.ipAddress,
+      userAgent: requestMeta.userAgent,
+    });
+    throw errors.unauthorized('Session has been revoked. Please sign in again.');
+  }
+  const tokens = rotation.tokens;
 
   await audit.record({
     actorUserId: user.id,
