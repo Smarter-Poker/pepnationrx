@@ -179,9 +179,15 @@ async function login(input, requestMeta) {
   return { user: toPublicUser(row), tokens: tokens };
 }
 
-// Rotate a refresh token: verify it, revoke it, and issue a fresh pair.
-// A presented-but-already-revoked token indicates theft; the whole token
-// family is revoked and the event audited.
+// A refresh token revoked within this window, presented again, is treated as
+// a benign double-submit (a retry, or two tabs refreshing at once) rather than
+// theft: the duplicate request is rejected without revoking the session the
+// legitimate rotation just issued.
+const ROTATION_GRACE_MS = 10 * 1000;
+
+// Rotate a refresh token: verify it, revoke it, and issue a fresh pair. A
+// token revoked outside the grace window, presented again, indicates theft:
+// the whole token family is revoked and the event audited.
 async function refresh(refreshToken, requestMeta) {
   let claims;
   try {
@@ -198,7 +204,15 @@ async function refresh(refreshToken, requestMeta) {
   }
 
   if (stored.revoked_at) {
-    // Reuse of a revoked token: treat the family as compromised.
+    const revokedAgeMs = Date.now() - new Date(stored.revoked_at).getTime();
+    if (revokedAgeMs <= ROTATION_GRACE_MS) {
+      // A token revoked moments ago, presented again, is almost always a
+      // benign double-submit; reject this one request without tearing down
+      // the user's other sessions.
+      throw errors.unauthorized('Refresh token already used. Please retry.');
+    }
+    // A long-revoked token resurfacing is a genuine reuse/theft signal: treat
+    // the whole token family as compromised.
     await refreshTokenModel.revokeAllForUser(stored.user_id);
     await audit.record({
       actorUserId: stored.user_id,
@@ -225,8 +239,8 @@ async function refresh(refreshToken, requestMeta) {
 
   // Revoke the old token and issue the new pair on one transaction. revokeById
   // only updates a still-live row, so a 0 row count means a concurrent request
-  // already rotated this exact token between the revoked_at check above and
-  // now - that is reuse of a single-use token, so the family is compromised.
+  // already rotated this exact token - a simultaneous double-submit, handled
+  // below as a benign retry rather than as theft.
   const rotation = await withTransaction(async (client) => {
     const revokedCount = await refreshTokenModel.revokeById(stored.id, client);
     if (revokedCount === 0) {
@@ -237,16 +251,10 @@ async function refresh(refreshToken, requestMeta) {
   });
 
   if (rotation.reuse) {
-    await refreshTokenModel.revokeAllForUser(stored.user_id);
-    await audit.record({
-      actorUserId: stored.user_id,
-      action: AUDIT_ACTIONS.TOKEN_REUSE_DETECTED,
-      entityType: 'refresh_token',
-      entityId: stored.id,
-      ipAddress: requestMeta.ipAddress,
-      userAgent: requestMeta.userAgent,
-    });
-    throw errors.unauthorized('Session has been revoked. Please sign in again.');
+    // A concurrent request rotated this token during this one's transaction:
+    // a simultaneous double-submit, not theft. Reject only this request - the
+    // concurrent rotation succeeded and the user's session is intact.
+    throw errors.unauthorized('Refresh token already used. Please retry.');
   }
   const tokens = rotation.tokens;
 

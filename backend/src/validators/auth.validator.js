@@ -29,10 +29,25 @@ const dateOfBirthSchema = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date of birth must be in YYYY-MM-DD format.')
   .refine((value) => {
-    const parsed = Date.parse(value);
-    return !Number.isNaN(parsed) && parsed < Date.now();
+    // Date parsing rolls impossible dates over (2021-02-30 becomes Mar 2), so
+    // a real date must format back to exactly the input string.
+    const parsed = new Date(value + 'T00:00:00Z');
+    if (Number.isNaN(parsed.getTime())) return false;
+    if (parsed.toISOString().slice(0, 10) !== value) return false;
+    return parsed.getTime() < Date.now();
   }, 'Date of birth must be a valid past date.')
   .optional();
+
+// The 50 US states plus the District of Columbia, by USPS code. A telehealth
+// encounter is routed by the patient's state, so an unrecognized two-letter
+// code must not pass validation.
+const US_STATE_CODES = [
+  'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'DC', 'FL', 'GA', 'HI',
+  'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN',
+  'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH',
+  'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA',
+  'WV', 'WI', 'WY',
+];
 
 const registerSchema = z.object({
   email: emailSchema,
@@ -42,14 +57,14 @@ const registerSchema = z.object({
   phone: z.string().trim().min(7).max(20).optional(),
   dateOfBirth: dateOfBirthSchema,
   sexAtBirth: z.enum(['male', 'female', 'intersex']).optional(),
-  // Two-letter US state of residence. Optional at the API layer so older
-  // clients still register; the sign-up form collects it so a telehealth
-  // encounter can be routed to the correct visit modality.
+  // US state of residence, validated against the real USPS codes. Optional at
+  // the API layer so older clients still register; the sign-up form collects
+  // it so a telehealth encounter can be routed to the correct visit modality.
   state: z
     .string()
     .trim()
     .toUpperCase()
-    .regex(/^[A-Z]{2}$/, 'State must be a two-letter code.')
+    .refine((v) => US_STATE_CODES.includes(v), 'A valid US state code is required.')
     .optional(),
 });
 

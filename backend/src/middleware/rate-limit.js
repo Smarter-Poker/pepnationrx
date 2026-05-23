@@ -2,9 +2,11 @@
 
 // ============================================================================
 // Rate limiting middleware.
-// Two limiters are exported: a general per-IP limiter for the whole API and a
-// stricter limiter for authentication routes, which are the prime target for
-// credential-stuffing. Window and ceilings come from configuration.
+// Three limiters are exported: a general per-IP limiter for the whole API, a
+// strict limiter for the credential endpoints (the prime credential-stuffing
+// targets), and a separate, more generous limiter for token refresh. Each is
+// its own rate-limit instance, so the buckets do not bleed into one another.
+// Window and ceilings come from configuration.
 // ============================================================================
 
 const rateLimit = require('express-rate-limit');
@@ -25,8 +27,11 @@ const generalLimiter = rateLimit({
   handler: limitHandler,
 });
 
-// Stricter limiter for login, register, and refresh endpoints.
-const authLimiter = rateLimit({
+// Strict limiter for the credential endpoints (register, login): the prime
+// credential-stuffing targets. This is its own rate-limit instance - a
+// separate per-IP bucket - so it can neither exhaust nor be exhausted by the
+// refresh endpoint.
+const credentialLimiter = rateLimit({
   windowMs: config.rateLimit.windowMs,
   max: config.rateLimit.authMax,
   standardHeaders: true,
@@ -34,7 +39,21 @@ const authLimiter = rateLimit({
   handler: limitHandler,
 });
 
+// Limiter for token refresh and logout. A normal single-page app refreshes
+// its access token routinely, often from several tabs at once, so this bucket
+// is far more generous than the credential limiter while still bounding
+// abuse. It is a separate instance, so a burst of refreshes never locks a
+// user out of logging in.
+const refreshLimiter = rateLimit({
+  windowMs: config.rateLimit.windowMs,
+  max: config.rateLimit.max,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: limitHandler,
+});
+
 module.exports = {
   generalLimiter: generalLimiter,
-  authLimiter: authLimiter,
+  credentialLimiter: credentialLimiter,
+  refreshLimiter: refreshLimiter,
 };
