@@ -222,3 +222,9 @@ pnrx-admin-dashboard {
   background: var(--amber-100);
   color: var(--amber-600);
 }
+
+.pnrx-admin__empty { text-align: center; color: var(--canvas-400); padding: var(--space-6) var(--space-4); font-size: var(--text-md); }
+.pnrx-admin__num { text-align: right; font-variant-numeric: tabular-nums; }
+.pnrx-admin__section { background: var(--white); border: 1px solid var(--canvas-200); border-radius: var(--radius-lg); box-shadow: var(--elev-2); padding: var(--space-5); margin-bottom: var(--space-6); }
+.pnrx-admin__section-title { font-size: var(--text-lg); font-weight: var(--weight-bold); color: var(--canvas-700); margin: 0 0 var(--space-4); }
+.pnrx-admin__tag { display: inline-block; padding: 2px 6px; font-size: 10px; font-weight: var(--weight-bold); text-transform: uppercase; border-radius: var(--radius-pill); background: var(--red-100); color: var(--red-600); margin-left: var(--space-2); }

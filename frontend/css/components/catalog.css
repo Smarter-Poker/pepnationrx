@@ -543,3 +543,5 @@
     grid-template-columns: 1fr;
   }
 }
+
+.pnrx-catalog__card-row { display: flex; align-items: center; gap: var(--space-2); }

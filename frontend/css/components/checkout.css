@@ -291,3 +291,11 @@ pnrx-checkout {
   border-radius: var(--radius-md);
   display: inline-block;
 }
+
+.pnrx-checkout__consent { display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-4); background: var(--canvas-50); border: 1px solid var(--canvas-200); border-radius: var(--radius-md); margin-bottom: var(--space-4); }
+.pnrx-checkout__error { background: var(--red-100); color: var(--red-600); padding: var(--space-3); border-radius: var(--radius-md); font-size: var(--text-sm); margin-bottom: var(--space-4); }
+.pnrx-checkout__field--state {}
+.pnrx-checkout__field--zip { max-width: 160px; }
+.pnrx-checkout__line { display: flex; justify-content: space-between; padding: var(--space-2) 0; font-size: var(--text-sm); color: var(--canvas-600); }
+.pnrx-checkout__line--total { border-top: 1px solid var(--canvas-200); margin-top: var(--space-3); padding-top: var(--space-3); font-weight: var(--weight-bold); font-size: var(--text-md); color: var(--canvas-700); }
+.pnrx-checkout__row { display: flex; gap: var(--space-3); margin-bottom: var(--space-4); }

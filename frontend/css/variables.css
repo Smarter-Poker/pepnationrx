@@ -105,9 +105,7 @@
   --grey-500: var(--canvas-500);
   --grey-600: var(--canvas-600);
   --grey-700: var(--canvas-700);
-  --white-soft: var(--canvas-600);
-  --black-000: var(--canvas-700);
-  --silver-300: var(--canvas-400);
+  --grey-700: var(--canvas-700);
 
   /* ==========================================================================
      4. ELEVATION  (the key to "premium depth")
@@ -144,24 +142,7 @@
 
   /* Keep legacy names so nothing breaks */
   --elev-6: var(--elev-5);
-  --metal-panel: none;
-  --metal-rail: var(--color-accent);
-  --metal-dark-panel: var(--color-bg-recessed);
-  --metal-surface: var(--color-surface);
-  --metal-grain: none;
-  --bevel-raised: none;
-  --bevel-inset: none;
-  --glow-teal: none;
-  --glow-teal-soft: none;
-  --glow-blue: none;
-  --glow-blue-soft: none;
-  --glow-text-teal: none;
-  --glow-text-blue: none;
-  --edge-teal: 1px solid var(--teal-500);
-  --edge-blue: 1px solid var(--blue-600);
-  --border-hairline: 1px solid var(--canvas-200);
-  --border-strong:   1px solid var(--canvas-300);
-  --border-metal:    1px solid var(--canvas-200);
+
 
   /* ==========================================================================
      5. SPACING  (8px grid)
