@@ -1,18 +1,21 @@
 /* ============================================================================
-   PEPNATIONRX.COM - APPLICATION SHELL STYLES
-   File: frontend/css/components/app-shell.css
-   ----------------------------------------------------------------------------
-   Light theme header, outlet, and footer for the pnrx-app-shell component.
+   PEPNATIONRX — APP SHELL  v3  (Premium)
+   Header: white, 68px tall, strong shadow — like Ro / Hims.
+   Footer: minimal, muted. Outlet: proper canvas background.
    ============================================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; }
 
 pnrx-app-shell {
   display: block;
   min-height: 100vh;
   font-family: var(--font-sans);
-  color: var(--color-text-primary);
   background: var(--color-bg);
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .pnrx-shell {
@@ -21,114 +24,122 @@ pnrx-app-shell {
   min-height: 100vh;
 }
 
-/* -- Header ----------------------------------------------------------------- */
+/* ── Header ─────────────────────────────────────────────────────────────────
+   White, 68px, sticky. Strong bottom shadow gives clear separation from page.
+   Matches Ro.co and Hims nav design exactly.
+   ─────────────────────────────────────────────────────────────────────────── */
 .pnrx-shell__header {
   position: sticky;
   top: 0;
   z-index: var(--z-sticky);
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-3);
+  gap: var(--space-5);
   padding: 0 var(--layout-gutter);
-  height: 64px;
-  background: var(--grey-000);
-  border-bottom: 1px solid var(--grey-150);
-  box-shadow: 0 1px 3px hsla(215, 20%, 20%, 0.06);
+  height: var(--nav-height);
+  background: var(--white);
+  border-bottom: 1px solid var(--canvas-200);
+  /* Ro-style nav shadow — noticeably deeper than a hairline */
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.05),
+    0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
+/* Logo link */
 .pnrx-shell__brand {
   display: inline-flex;
   align-items: center;
   text-decoration: none;
   flex-shrink: 0;
+  gap: var(--space-2);
 }
 
-/* Logo: your exact Pep Nation Rx image with transparent background */
+/* The transparent-background Pep Nation Rx PNG */
 .pnrx-shell__logo {
   display: block;
-  height: 40px;
+  height: 42px;
   width: auto;
   object-fit: contain;
 }
 
+/* Nav links */
 .pnrx-shell__nav {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-1);
+  flex: 1;
+  justify-content: flex-end;
 }
 
 .pnrx-shell__link {
   padding: var(--space-2) var(--space-3);
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
-  color: var(--grey-500);
+  color: var(--canvas-500);
   text-decoration: none;
   border-radius: var(--radius-md);
   transition:
     color var(--duration-fast) var(--ease-standard),
     background var(--duration-fast) var(--ease-standard);
+  white-space: nowrap;
 }
 
 .pnrx-shell__link:hover {
-  color: var(--grey-600);
-  background: var(--grey-100);
+  color: var(--canvas-700);
+  background: var(--canvas-100);
 }
 
+/* Sign-in button — ghost style */
 .pnrx-shell__signout {
-  padding: calc(var(--space-2) - 1px) var(--space-3);
+  display: inline-flex;
+  align-items: center;
+  padding: 9px var(--space-4);
   font-family: var(--font-sans);
   font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  color: var(--grey-500);
+  font-weight: var(--weight-semibold);
+  color: var(--teal-500);
   background: transparent;
-  border: 1px solid var(--grey-200);
+  border: 1.5px solid var(--teal-500);
   border-radius: var(--radius-md);
   cursor: pointer;
+  white-space: nowrap;
   transition:
-    color var(--duration-fast) var(--ease-standard),
-    border-color var(--duration-fast) var(--ease-standard),
-    background var(--duration-fast) var(--ease-standard);
+    background var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
 }
 
 .pnrx-shell__signout:hover {
-  color: var(--grey-600);
-  border-color: var(--grey-300);
-  background: var(--grey-100);
+  background: var(--teal-50);
 }
 
-/* -- Route outlet ----------------------------------------------------------- */
+/* ── Route outlet ─────────────────────────────────────────────────────────── */
 .pnrx-shell__outlet {
   flex: 1 1 auto;
   width: 100%;
-  max-width: var(--layout-max-width);
-  margin: 0 auto;
-  padding: var(--space-6) var(--layout-gutter);
 }
 
 .pnrx-shell__notice {
-  padding: var(--space-7) var(--space-4);
+  padding: var(--space-9) var(--space-5);
   text-align: center;
   color: var(--color-text-secondary);
   font-size: var(--text-lg);
 }
 
-/* -- Footer ----------------------------------------------------------------- */
+/* ── Footer ──────────────────────────────────────────────────────────────── */
 .pnrx-shell__footer {
   padding: var(--space-5) var(--layout-gutter);
-  background: var(--grey-000);
-  border-top: 1px solid var(--grey-150);
+  background: var(--white);
+  border-top: 1px solid var(--canvas-200);
+  margin-top: auto;
 }
 
 .pnrx-shell__legal {
   margin: 0;
-  font-size: var(--text-xs);
-  color: var(--grey-400);
+  font-size: 0.8125rem;   /* 13px — matches competitor footers exactly */
+  color: var(--canvas-400);
   text-align: center;
-  letter-spacing: 0.01em;
-  line-height: 1.6;
+  line-height: 1.65;
 }
 
 .pnrx-shell__legal--links {
@@ -136,32 +147,34 @@ pnrx-app-shell {
 }
 
 .pnrx-shell__legal-link {
-  color: var(--grey-400);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  transition: color var(--duration-fast) var(--ease-standard);
+  color: var(--canvas-400);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color var(--duration-fast), border-color var(--duration-fast);
 }
 
 .pnrx-shell__legal-link:hover {
   color: var(--teal-500);
+  border-bottom-color: var(--teal-100);
 }
 
-/* -- Legal placeholder pages (/terms /privacy /legal) ----------------------- */
+/* ── Legal page (terms / privacy / legal notices) ────────────────────────── */
 .pnrx-shell__legal-page {
   max-width: 720px;
-  margin: 0 auto;
-  padding: var(--space-6) var(--space-4);
+  margin: var(--space-7) auto;
+  padding: 0 var(--layout-gutter) var(--space-7);
 }
 
 .pnrx-shell__legal-page-title {
-  margin: 0 0 var(--space-4);
-  font-size: var(--text-2xl);
+  font-size: var(--text-3xl);
   font-weight: var(--weight-bold);
-  color: var(--grey-600);
+  color: var(--canvas-700);
+  margin: 0 0 var(--space-5);
+  line-height: var(--leading-tight);
 }
 
 .pnrx-shell__legal-page-body {
   font-size: var(--text-md);
   line-height: var(--leading-base);
-  color: var(--grey-500);
+  color: var(--canvas-500);
 }

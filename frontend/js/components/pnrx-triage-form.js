@@ -336,11 +336,24 @@ export class PnrxTriageForm extends PnrxComponent {
   }
 
   renderProtocolScreen() {
+    // Icon map keyed to protocol id — displayed in a teal bubble on each card.
+    const ICONS = {
+      trt:               '⚡',
+      weight_management: '🎯',
+      peptide_therapy:   '🔬',
+      mens_optimization: '💪',
+      womens_wellness:   '🌿',
+      sexual_health:     '🛡️',
+      longevity:         '⏳',
+    };
+
     const cards = PROTOCOLS.map(function (protocol) {
+      const icon = ICONS[protocol.id] || '✦';
       return (
         '<button type="button" class="pnrx-triage__card" data-protocol="' +
         escapeHtml(protocol.id) +
         '">' +
+        '<span class="pnrx-triage__card-icon" aria-hidden="true">' + icon + '</span>' +
         '<span class="pnrx-triage__card-title">' +
         escapeHtml(protocol.label) +
         '</span>' +
@@ -353,9 +366,10 @@ export class PnrxTriageForm extends PnrxComponent {
 
     return (
       '<header class="pnrx-triage__head">' +
-      '<h2 class="pnrx-triage__title">Begin Your Clinical Intake</h2>' +
-      '<p class="pnrx-triage__sub">Select The Program You Would Like To Be ' +
-      'Evaluated For. You Can Change This At Any Time.</p>' +
+      '<h2 class="pnrx-triage__title">Choose Your Program</h2>' +
+      '<p class="pnrx-triage__sub">Select The Area You Would Like To Be ' +
+      'Evaluated For. Your Responses Are Reviewed By A Licensed Clinician ' +
+      'Before Any Treatment Is Recommended.</p>' +
       '</header>' +
       '<div class="pnrx-triage__grid">' +
       cards +

@@ -1,144 +1,150 @@
 /* ============================================================================
-   PEPNATIONRX — CHECKOUT COMPONENT
-   Two-column checkout flow — form on the left, order summary on the right.
+   PEPNATIONRX — CHECKOUT  v3  (Premium)
+   Two-column layout: form left, order summary sidebar right.
+   White sections on canvas bg — Ro / PlushCare checkout style.
    ============================================================================ */
 
-/* ---- Outer page wrapper ---- */
-.pnrx-checkout {
-  background: var(--color-bg);
-  min-height: 100vh;
-  padding: var(--space-6) var(--space-5);
+pnrx-checkout {
+  display: block;
   font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
 }
 
-/* ---- Page title ---- */
+.pnrx-checkout {
+  min-height: calc(100vh - var(--nav-height));
+  background: var(--color-bg);
+  padding: var(--space-7) var(--layout-gutter) var(--space-8);
+}
+
 .pnrx-checkout__title {
-  font-size: var(--text-2xl);
+  font-size: var(--text-3xl);
   font-weight: var(--weight-bold);
-  color: var(--color-text-primary);
+  color: var(--canvas-700);
   margin: 0 0 var(--space-6);
   line-height: var(--leading-tight);
+  letter-spacing: -0.02em;
+  max-width: var(--layout-max-width);
+  margin-inline: auto;
+  padding-bottom: var(--space-6);
 }
 
-/* ---- Empty cart message ---- */
 .pnrx-checkout__empty {
-  background: var(--grey-100);
-  border: 1px solid var(--grey-150);
-  border-radius: var(--radius-lg);
-  padding: var(--space-7) var(--space-6);
+  padding: var(--space-9) var(--space-5);
   text-align: center;
-  font-size: var(--text-md);
-  color: var(--color-text-muted);
+  color: var(--canvas-400);
+  font-size: var(--text-lg);
 }
 
-/* ---- Two-column layout grid ---- */
+/* ── Two-column layout ───────────────────────────────────────────────────── */
 .pnrx-checkout__layout {
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--space-5);
   max-width: var(--layout-max-width);
   margin-inline: auto;
-  align-items: start;
 }
 
-@media (min-width: 840px) {
+@media (min-width: 860px) {
   .pnrx-checkout__layout {
-    grid-template-columns: 1fr 360px;
+    grid-template-columns: 1.65fr 1fr;
+    align-items: start;
   }
 }
 
-/* ---- Main form column ---- */
 .pnrx-checkout__main {
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--space-4);
 }
 
-/* ---- White section card ---- */
+/* ── Section card ─────────────────────────────────────────────────────────── */
 .pnrx-checkout__section {
-  background: var(--color-surface);
-  border: 1px solid var(--grey-150);
+  background: var(--white);
+  border: 1px solid var(--canvas-200);
   border-radius: var(--radius-lg);
   box-shadow: var(--elev-2);
-  padding: var(--space-5) var(--space-6);
+  padding: var(--space-6);
 }
 
-/* ---- Section sub-heading ---- */
 .pnrx-checkout__subhead {
-  font-size: var(--text-md);
+  font-size: var(--text-lg);
   font-weight: var(--weight-bold);
-  color: var(--color-text-primary);
+  color: var(--canvas-700);
   margin: 0 0 var(--space-4);
-  padding-bottom: var(--space-3);
-  border-bottom: 1px solid var(--grey-150);
+  line-height: var(--leading-tight);
 }
 
-/* ---- Hint text ---- */
 .pnrx-checkout__hint {
-  font-size: var(--text-xs);
-  color: var(--color-text-muted);
-  margin: calc(-1 * var(--space-3)) 0 var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--canvas-400);
+  margin: calc(var(--space-2) * -1) 0 var(--space-4);
+  line-height: var(--leading-base);
 }
 
-/* ---- Form field ---- */
+/* ── Form fields ─────────────────────────────────────────────────────────── */
 .pnrx-checkout__field {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: 6px;
   margin-bottom: var(--space-4);
 }
 
 .pnrx-checkout__field label {
   font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  color: var(--color-text-secondary);
+  font-weight: var(--weight-semibold);
+  color: var(--canvas-600);
 }
 
 .pnrx-checkout__field input,
 .pnrx-checkout__field select {
   width: 100%;
-  padding: var(--space-3) var(--space-4);
+  padding: 12px var(--space-4);
   font-family: var(--font-sans);
   font-size: var(--text-md);
-  color: var(--color-text-primary);
-  background: var(--grey-000);
-  border: 1px solid var(--grey-200);
+  color: var(--canvas-700);
+  background: var(--white);
+  border: 1.5px solid var(--canvas-200);
   border-radius: var(--radius-md);
   outline: none;
-  appearance: none;
   transition:
     border-color var(--duration-fast) var(--ease-standard),
-    box-shadow var(--duration-fast) var(--ease-standard);
+    box-shadow   var(--duration-fast) var(--ease-standard);
   box-sizing: border-box;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
-.pnrx-checkout__field input::placeholder {
-  color: var(--grey-300);
-}
+.pnrx-checkout__field input::placeholder { color: var(--canvas-300); }
 
 .pnrx-checkout__field input:focus,
 .pnrx-checkout__field select:focus {
   border-color: var(--teal-500);
-  box-shadow: 0 0 0 3px hsla(174, 72%, 40%, 0.14);
+  box-shadow: 0 0 0 3px rgba(22, 160, 140, 0.14);
 }
 
-/* ---- Order summary sidebar ---- */
+/* Two-column field grid */
+.pnrx-checkout__field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+/* ── Order summary sidebar ───────────────────────────────────────────────── */
 .pnrx-checkout__summary {
-  background: var(--grey-100);
-  border: 1px solid var(--grey-150);
+  background: var(--white);
+  border: 1px solid var(--canvas-200);
   border-radius: var(--radius-lg);
-  padding: var(--space-5);
+  box-shadow: var(--elev-2);
+  padding: var(--space-6);
   position: sticky;
-  top: var(--space-5);
+  top: calc(var(--nav-height) + var(--space-4));
 }
 
 .pnrx-checkout__summary-title {
-  font-size: var(--text-md);
+  font-size: var(--text-lg);
   font-weight: var(--weight-bold);
-  color: var(--color-text-primary);
-  margin: 0 0 var(--space-4);
-  padding-bottom: var(--space-3);
-  border-bottom: 1px solid var(--grey-150);
+  color: var(--canvas-700);
+  margin: 0 0 var(--space-5);
 }
 
 .pnrx-checkout__summary-row {
@@ -148,90 +154,108 @@
   gap: var(--space-4);
   padding: var(--space-2) 0;
   font-size: var(--text-sm);
-  color: var(--color-text-secondary);
-  border-bottom: 1px solid var(--grey-150);
+  color: var(--canvas-500);
+  border-bottom: 1px solid var(--canvas-200);
 }
 
 .pnrx-checkout__summary-row:last-of-type {
   border-bottom: none;
 }
 
-/* ---- Total row ---- */
 .pnrx-checkout__summary-total {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   gap: var(--space-4);
   padding: var(--space-4) 0 0;
-  margin-top: var(--space-3);
-  border-top: 2px solid var(--grey-200);
-  font-size: var(--text-md);
+  margin-top: var(--space-2);
+  border-top: 2px solid var(--canvas-200);
+  font-size: var(--text-lg);
   font-weight: var(--weight-bold);
-  color: var(--color-text-primary);
+  color: var(--canvas-700);
 }
 
-/* ---- Big teal submit button ---- */
+/* ── Primary CTA ─────────────────────────────────────────────────────────── */
 .pnrx-checkout__cta {
-  display: block;
   width: 100%;
-  padding: var(--space-4) var(--space-5);
+  margin-top: var(--space-4);
+  padding: 14px var(--space-5);
   font-family: var(--font-sans);
   font-size: var(--text-md);
-  font-weight: var(--weight-medium);
-  color: var(--grey-000);
+  font-weight: var(--weight-bold);
+  color: var(--white);
   background: var(--teal-500);
   border: none;
   border-radius: var(--radius-md);
   cursor: pointer;
-  text-align: center;
-  text-decoration: none;
-  margin-top: var(--space-5);
+  letter-spacing: 0.01em;
   transition:
-    background var(--duration-fast) var(--ease-standard),
-    box-shadow var(--duration-fast) var(--ease-standard),
-    transform var(--duration-fast) var(--ease-standard);
+    background  var(--duration-fast) var(--ease-standard),
+    box-shadow  var(--duration-fast) var(--ease-standard),
+    transform   var(--duration-fast) var(--ease-standard);
 }
 
-.pnrx-checkout__cta:hover {
+.pnrx-checkout__cta:hover:not(:disabled) {
   background: var(--teal-400);
-  box-shadow: var(--elev-2);
+  box-shadow: 0 4px 14px rgba(22, 160, 140, 0.32);
   transform: translateY(-1px);
 }
 
-.pnrx-checkout__cta:active {
-  background: var(--teal-300);
+.pnrx-checkout__cta:active:not(:disabled) {
+  background: var(--teal-600);
   box-shadow: none;
   transform: translateY(0);
 }
 
 .pnrx-checkout__cta:disabled {
-  background: var(--grey-300);
+  background: var(--canvas-200);
+  color: var(--canvas-400);
   cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
 }
 
-/* ---- Legal footnote ---- */
 .pnrx-checkout__legal {
-  font-size: var(--text-xs);
-  color: var(--color-text-muted);
+  margin-top: var(--space-3);
+  font-size: 0.8125rem;
+  color: var(--canvas-400);
+  line-height: var(--leading-base);
   text-align: center;
-  margin-top: var(--space-4);
+}
+
+/* ── Success state ─────────────────────────────────────────────────────────── */
+.pnrx-checkout__success {
+  background: var(--white);
+  border: 1.5px solid var(--teal-100);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--elev-3);
+  padding: var(--space-8) var(--space-6);
+  text-align: center;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.pnrx-checkout__success h2 {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  color: var(--teal-600);
+  margin: 0 0 var(--space-4);
+  letter-spacing: -0.02em;
+}
+
+.pnrx-checkout__success p {
+  max-width: 44ch;
+  margin: 0 auto var(--space-3);
+  color: var(--canvas-500);
+  font-size: var(--text-md);
   line-height: var(--leading-base);
 }
 
-/* ---- Success state ---- */
-.pnrx-checkout__success {
-  background: hsl(174, 60%, 96%);
-  border: 2px solid var(--teal-500);
-  border-radius: var(--radius-lg);
-  padding: var(--space-7) var(--space-6);
-  text-align: center;
-}
-
 .pnrx-checkout__ref {
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
   font-family: var(--font-mono);
-  margin-top: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--canvas-400);
+  margin-top: var(--space-4);
+  padding: var(--space-2) var(--space-4);
+  background: var(--canvas-100);
+  border-radius: var(--radius-md);
+  display: inline-block;
 }

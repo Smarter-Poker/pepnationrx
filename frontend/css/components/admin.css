@@ -1,107 +1,103 @@
 /* ============================================================================
-   PEPNATIONRX — ADMIN DASHBOARD COMPONENT
-   White cards, teal buttons, clean data tables with light header rows.
+   PEPNATIONRX — ADMIN DASHBOARD  v3  (Premium)
    ============================================================================ */
 
-/* ---- Outer page wrapper ---- */
-.pnrx-admin {
-  background: var(--color-bg);
-  min-height: 100vh;
-  padding: var(--space-6) var(--space-5);
+pnrx-admin-dashboard {
+  display: block;
   font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
 }
 
-/* ---- Page header ---- */
+.pnrx-admin {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: var(--space-7) var(--layout-gutter);
+}
+
+/* ── Page header ─────────────────────────────────────────────────────────── */
 .pnrx-admin__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: var(--space-4);
   margin-bottom: var(--space-6);
 }
 
 .pnrx-admin__title {
-  font-size: var(--text-2xl);
+  font-size: var(--text-3xl);
   font-weight: var(--weight-bold);
-  color: var(--color-text-primary);
-  margin: 0 0 var(--space-1);
+  color: var(--canvas-700);
+  margin: 0 0 var(--space-2);
   line-height: var(--leading-tight);
+  letter-spacing: -0.02em;
 }
 
 .pnrx-admin__sub {
   font-size: var(--text-sm);
-  color: var(--color-text-muted);
+  color: var(--canvas-400);
   margin: 0;
 }
 
-/* ---- Empty / loading state banner ---- */
+/* ── States ──────────────────────────────────────────────────────────────── */
 .pnrx-admin__state {
-  background: var(--grey-100);
-  border: 1px solid var(--grey-150);
-  border-radius: var(--radius-lg);
-  padding: var(--space-7) var(--space-6);
+  padding: var(--space-8) var(--space-5);
   text-align: center;
-  margin-bottom: var(--space-6);
 }
 
 .pnrx-admin__state-text {
-  font-size: var(--text-md);
-  color: var(--color-text-muted);
+  font-size: var(--text-lg);
+  color: var(--canvas-500);
   margin: 0 0 var(--space-5);
 }
 
-/* ---- Teal primary button ---- */
+.pnrx-admin__state--error .pnrx-admin__state-text {
+  color: var(--red-600);
+}
+
+/* ── Teal button ─────────────────────────────────────────────────────────── */
 .pnrx-admin__btn {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-3) var(--space-5);
+  padding: 11px var(--space-5);
   font-family: var(--font-sans);
   font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  color: var(--grey-000);
+  font-weight: var(--weight-semibold);
+  color: var(--white);
   background: var(--teal-500);
   border: none;
   border-radius: var(--radius-md);
   cursor: pointer;
-  text-decoration: none;
   transition:
     background var(--duration-fast) var(--ease-standard),
-    box-shadow var(--duration-fast) var(--ease-standard),
-    transform var(--duration-fast) var(--ease-standard);
+    box-shadow  var(--duration-fast) var(--ease-standard),
+    transform   var(--duration-fast) var(--ease-standard);
 }
 
 .pnrx-admin__btn:hover {
   background: var(--teal-400);
-  box-shadow: var(--elev-2);
+  box-shadow: 0 4px 14px rgba(22, 160, 140, 0.30);
   transform: translateY(-1px);
 }
 
-.pnrx-admin__btn:active {
-  background: var(--teal-300);
-  box-shadow: none;
-  transform: translateY(0);
+.pnrx-admin__btn:focus-visible {
+  outline: 3px solid var(--teal-500);
+  outline-offset: 2px;
 }
 
-/* ---- Stat grid ---- */
+/* ── Stats grid ──────────────────────────────────────────────────────────── */
 .pnrx-admin__stats {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: var(--space-4);
   margin-bottom: var(--space-6);
 }
 
-/* ---- Stat card ---- */
 .pnrx-admin__stat {
-  background: var(--color-surface);
-  border: 1px solid var(--grey-150);
+  background: var(--white);
+  border: 1px solid var(--canvas-200);
   border-radius: var(--radius-lg);
-  box-shadow: var(--elev-1);
-  padding: var(--space-5);
+  box-shadow: var(--elev-2);
+  padding: var(--space-5) var(--space-4);
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-1);
 }
 
 .pnrx-admin__stat-value {
@@ -109,19 +105,20 @@
   font-weight: var(--weight-bold);
   color: var(--teal-500);
   line-height: 1;
-  margin: 0;
 }
 
 .pnrx-admin__stat-label {
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
-  margin: 0;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  color: var(--canvas-400);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
 }
 
-/* ---- White section card ---- */
+/* ── Section card ─────────────────────────────────────────────────────────── */
 .pnrx-admin__card {
-  background: var(--color-surface);
-  border: 1px solid var(--grey-150);
+  background: var(--white);
+  border: 1px solid var(--canvas-200);
   border-radius: var(--radius-lg);
   box-shadow: var(--elev-2);
   padding: var(--space-5);
@@ -130,119 +127,98 @@
 }
 
 .pnrx-admin__card-title {
-  font-size: var(--text-md);
+  font-size: var(--text-lg);
   font-weight: var(--weight-bold);
-  color: var(--color-text-primary);
+  color: var(--canvas-700);
   margin: 0 0 var(--space-4);
-  padding-bottom: var(--space-3);
-  border-bottom: 1px solid var(--grey-150);
 }
 
-/* ---- Table scroll wrapper ---- */
+/* ── Data table ──────────────────────────────────────────────────────────── */
 .pnrx-admin__table-wrap {
   overflow-x: auto;
-  margin: 0 calc(-1 * var(--space-5));
-  padding: 0 var(--space-5);
+  margin: 0 calc(var(--space-5) * -1);
 }
 
-/* ---- Data table ---- */
 .pnrx-admin__table {
   width: 100%;
   border-collapse: collapse;
   font-size: var(--text-sm);
-  color: var(--color-text-secondary);
 }
 
 .pnrx-admin__table thead tr {
-  background: var(--grey-100);
-  border-bottom: 2px solid var(--grey-200);
+  background: var(--canvas-100);
+  border-bottom: 2px solid var(--canvas-200);
 }
 
-.pnrx-admin__table thead th {
+.pnrx-admin__table th {
   padding: var(--space-3) var(--space-4);
-  text-align: left;
-  font-weight: var(--weight-medium);
-  color: var(--color-text-muted);
   font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  color: var(--canvas-500);
+  text-align: left;
   text-transform: uppercase;
   letter-spacing: var(--tracking-wide);
   white-space: nowrap;
 }
 
-.pnrx-admin__table tbody tr {
-  border-bottom: 1px solid var(--grey-150);
-  transition: background var(--duration-fast) var(--ease-standard);
-}
-
-.pnrx-admin__table tbody tr:last-child {
-  border-bottom: none;
-}
-
-.pnrx-admin__table tbody tr:hover {
-  background: var(--grey-050);
-}
-
-.pnrx-admin__table tbody td {
+.pnrx-admin__table td {
   padding: var(--space-3) var(--space-4);
+  color: var(--canvas-600);
+  border-bottom: 1px solid var(--canvas-200);
   vertical-align: middle;
 }
 
-/* ---- Status pill ---- */
-.pnrx-admin__pill {
-  display: inline-block;
-  padding: 2px var(--space-3);
-  font-size: var(--text-xs);
-  font-weight: var(--weight-medium);
-  border-radius: var(--radius-pill);
-  background: var(--grey-100);
-  color: var(--color-text-muted);
-  border: 1px solid var(--grey-150);
-  white-space: nowrap;
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-wide);
+.pnrx-admin__table tr:last-child td { border-bottom: none; }
+
+.pnrx-admin__table tr:hover td {
+  background: var(--canvas-100);
 }
 
-.pnrx-admin__pill--active {
-  background: hsl(174, 60%, 93%);
-  color: hsl(174, 72%, 28%);
-  border-color: hsl(174, 50%, 80%);
-}
-
-.pnrx-admin__pill--blocked {
-  background: hsl(0, 70%, 95%);
-  color: hsl(0, 60%, 42%);
-  border-color: hsl(0, 55%, 85%);
-}
-
-.pnrx-admin__pill--pending {
-  background: hsl(40, 80%, 94%);
-  color: hsl(34, 72%, 38%);
-  border-color: hsl(40, 60%, 82%);
-}
-
-/* ---- List row (non-table) ---- */
+/* ── Row list (non-table) ────────────────────────────────────────────────── */
 .pnrx-admin__row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
   padding: var(--space-3) 0;
-  border-bottom: 1px solid var(--grey-150);
+  border-bottom: 1px solid var(--canvas-200);
 }
 
-.pnrx-admin__row:last-child {
-  border-bottom: none;
-}
+.pnrx-admin__row:last-child { border-bottom: none; }
 
 .pnrx-admin__row-primary {
   font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  color: var(--color-text-primary);
-  margin: 0;
+  font-weight: var(--weight-semibold);
+  color: var(--canvas-700);
 }
 
 .pnrx-admin__row-secondary {
   font-size: var(--text-xs);
-  color: var(--color-text-muted);
-  margin: 0;
+  color: var(--canvas-400);
+}
+
+/* ── Status pills ─────────────────────────────────────────────────────────── */
+.pnrx-admin__pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+}
+
+.pnrx-admin__pill--active {
+  background: var(--green-100);
+  color: var(--green-600);
+}
+
+.pnrx-admin__pill--blocked {
+  background: var(--red-100);
+  color: var(--red-600);
+}
+
+.pnrx-admin__pill--pending {
+  background: var(--amber-100);
+  color: var(--amber-600);
 }
