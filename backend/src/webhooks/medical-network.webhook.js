@@ -31,6 +31,19 @@ router.post('/', async function (req, res) {
     });
   }
   if (verdict === 'unconfigured') {
+    // In production a missing secret means an unverified event; refuse it.
+    // A forged signed-prescription webhook must never be processed.
+    if (config.isProduction) {
+      logger.error(
+        'Medical network webhook secret not set in production; rejecting unverified event'
+      );
+      return res.status(503).json({
+        error: {
+          code: 'webhook_unconfigured',
+          message: 'Webhook verification is unavailable.',
+        },
+      });
+    }
     logger.warn('Medical network webhook secret not set; signature check skipped');
   }
 
@@ -41,8 +54,8 @@ router.post('/', async function (req, res) {
     });
   }
 
-  // 2. Record for idempotency. A null result means this event was already
-  // seen, so the work has already been done.
+  // 2. Record for idempotency. A null result means this event id was already
+  // seen; the block below decides whether it is a true replay or a retry.
   let record;
   try {
     record = await webhookEventModel.recordReceived({
@@ -58,7 +71,16 @@ router.post('/', async function (req, res) {
     });
   }
   if (!record) {
-    return res.status(200).json({ status: 'duplicate_ignored' });
+    // recordReceived hit the (source, external_event_id) unique constraint:
+    // this event id was seen before. Re-process it only when the prior
+    // attempt failed; a processed, ignored, or in-flight event stays a no-op
+    // so an ordinary replay is safe, while a transient failure is retried
+    // instead of being silently dropped.
+    const prior = await webhookEventModel.findByExternalId('medical_network', event.id);
+    if (!prior || prior.status !== 'failed') {
+      return res.status(200).json({ status: 'duplicate_ignored' });
+    }
+    record = prior;
   }
 
   // 3. Dispatch by event type.

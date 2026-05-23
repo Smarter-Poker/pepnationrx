@@ -37,6 +37,17 @@ async function applySignedPrescription(payload) {
     return null;
   }
 
+  // Idempotency guard: a re-delivered signed-prescription webhook (a network
+  // retry, or a retry of a previously failed event) must not create a second
+  // prescription. If one already exists for this submission, return it.
+  const existing = await prescriptionModel.findByIntakeSubmissionId(submission.id);
+  if (existing) {
+    logger.info('Signed prescription already applied; treating webhook as a replay', {
+      intakeSubmissionId: submission.id,
+    });
+    return existing;
+  }
+
   const rx = payload.prescription || {};
   const provider = await providerModel.findOrCreateByExternalId({
     externalProviderId: payload.provider && payload.provider.externalId,
@@ -46,25 +57,30 @@ async function applySignedPrescription(payload) {
     licensedStates: (payload.provider && payload.provider.licensedStates) || [],
   });
 
-  // The submission advance and the prescription insert must be atomic.
-  const prescription = await withTransaction(async function () {
-    const created = await prescriptionModel.create({
-      userId: submission.user_id,
-      intakeSubmissionId: submission.id,
-      providerId: provider.id,
-      drugCompound: rx.drugCompound,
-      strength: rx.strength,
-      dosageProtocol: rx.dosageProtocol,
-      sigDirections: rx.sigDirections,
-      quantity: rx.quantity,
-      daysSupply: rx.daysSupply,
-      refillsAuthorized: rx.refillsAuthorized || 0,
-      status: 'approved',
-      writtenDate: rx.writtenDate,
-      expirationDate: rx.expirationDate,
-      signedPayloadRef: rx.signedPayloadRef,
-    });
-    await intakeModel.updateStatus(submission.id, 'approved');
+  // The prescription insert and the intake-status advance must be atomic, so
+  // both run on the transaction's client - a failure after the insert rolls
+  // the prescription back rather than orphaning it against a stale intake.
+  const prescription = await withTransaction(async function (client) {
+    const created = await prescriptionModel.create(
+      {
+        userId: submission.user_id,
+        intakeSubmissionId: submission.id,
+        providerId: provider.id,
+        drugCompound: rx.drugCompound,
+        strength: rx.strength,
+        dosageProtocol: rx.dosageProtocol,
+        sigDirections: rx.sigDirections,
+        quantity: rx.quantity,
+        daysSupply: rx.daysSupply,
+        refillsAuthorized: rx.refillsAuthorized || 0,
+        status: 'approved',
+        writtenDate: rx.writtenDate,
+        expirationDate: rx.expirationDate,
+        signedPayloadRef: rx.signedPayloadRef,
+      },
+      client
+    );
+    await intakeModel.updateStatus(submission.id, 'approved', client);
     return created;
   });
 
@@ -94,6 +110,17 @@ async function applyReviewDecision(payload) {
   }
 
   const status = mapNetworkStatusToIntakeStatus(payload.decision);
+  // A review-decision webhook may only deny or request more information. An
+  // 'approved' outcome must come from applySignedPrescription, which also
+  // creates the prescription - never from this path, which creates none. This
+  // blocks a denied-typed event whose decision field claims approval.
+  if (status !== 'denied' && status !== 'needs_more_info') {
+    logger.warn('Review decision mapped to an unexpected status; ignoring', {
+      decision: payload.decision,
+      mapped: status,
+    });
+    return null;
+  }
   await intakeModel.updateStatus(submission.id, status);
 
   await audit.record({

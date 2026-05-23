@@ -44,6 +44,19 @@ router.post('/', async function (req, res) {
     });
   }
   if (verdict === 'unconfigured') {
+    // In production a missing secret means an unverified event; refuse it so
+    // a forged payment event cannot poison the financial audit trail.
+    if (config.isProduction) {
+      logger.error(
+        'Stripe webhook secret not set in production; rejecting unverified event'
+      );
+      return res.status(503).json({
+        error: {
+          code: 'webhook_unconfigured',
+          message: 'Webhook verification is unavailable.',
+        },
+      });
+    }
     logger.warn('Stripe webhook secret not set; signature check skipped');
   }
 
@@ -71,7 +84,13 @@ router.post('/', async function (req, res) {
     });
   }
   if (!record) {
-    return res.status(200).json({ status: 'duplicate_ignored' });
+    // Seen before: re-process only a previously failed attempt; a processed,
+    // ignored, or in-flight event stays a no-op so a replay is safe.
+    const prior = await webhookEventModel.findByExternalId('stripe', event.id);
+    if (!prior || prior.status !== 'failed') {
+      return res.status(200).json({ status: 'duplicate_ignored' });
+    }
+    record = prior;
   }
 
   // 3. Classify and audit.

@@ -17,8 +17,10 @@ const COLUMNS =
   'expiration_date, signed_payload_ref, created_at, updated_at';
 
 // Insert a prescription. written_date and expiration_date are ISO date
-// strings (YYYY-MM-DD); status defaults to 'pending_review'.
-async function create(data) {
+// strings (YYYY-MM-DD); status defaults to 'pending_review'. An optional
+// `client` runs the insert inside an open transaction so the prescription and
+// the intake-status advance commit or roll back as one unit.
+async function create(data, client) {
   return queryOne(
     'INSERT INTO prescriptions ' +
       '(user_id, subscription_id, intake_submission_id, provider_id, ' +
@@ -45,7 +47,8 @@ async function create(data) {
       data.writtenDate || null,
       data.expirationDate || null,
       data.signedPayloadRef || null,
-    ]
+    ],
+    client
   );
 }
 
@@ -64,6 +67,18 @@ async function findByUserId(userId) {
   return result.rows;
 }
 
+// Find the prescription created for an intake submission, if one exists. Used
+// as the idempotency guard in prescription-sync so a replayed signed-Rx
+// webhook returns the existing row instead of inserting a duplicate.
+async function findByIntakeSubmissionId(intakeSubmissionId) {
+  return queryOne(
+    'SELECT ' + COLUMNS +
+      ' FROM prescriptions WHERE intake_submission_id = $1 ' +
+      'ORDER BY created_at ASC LIMIT 1',
+    [intakeSubmissionId]
+  );
+}
+
 // Update the prescription status (for example to 'active' once fulfilled).
 async function updateStatus(id, status) {
   await query('UPDATE prescriptions SET status = $2 WHERE id = $1', [id, status]);
@@ -73,5 +88,6 @@ module.exports = {
   create: create,
   findById: findById,
   findByUserId: findByUserId,
+  findByIntakeSubmissionId: findByIntakeSubmissionId,
   updateStatus: updateStatus,
 };

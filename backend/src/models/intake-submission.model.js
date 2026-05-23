@@ -60,15 +60,18 @@ async function attachMedicalNetworkId(id, medicalNetworkSubmissionId) {
 }
 
 // Update the submission status. reviewed_at is stamped when the status
-// reflects a completed clinical review.
-async function updateStatus(id, status) {
+// reflects a completed clinical review. An optional `client` runs the update
+// inside an open transaction (prescription-sync pairs it with the
+// prescription insert so the two commit or roll back as one unit).
+async function updateStatus(id, status, client) {
   const reviewedStates = ['approved', 'denied', 'needs_more_info'];
   const stampReviewed = reviewedStates.indexOf(status) !== -1;
   await query(
     'UPDATE intake_submissions SET status = $2' +
       (stampReviewed ? ', reviewed_at = now()' : '') +
       ' WHERE id = $1',
-    [id, status]
+    [id, status],
+    client
   );
 }
 
