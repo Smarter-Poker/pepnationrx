@@ -21,13 +21,21 @@ const refreshTokenModel = require('../models/refresh-token.model');
 const audit = require('./audit.service');
 
 // A real bcrypt hash compared against when an email is not found, so a missing
-// account and a wrong password take indistinguishable time. It is generated at
-// load from a throwaway value: a hand-written hash literal risks being
-// malformed, which makes bcrypt.compare throw and breaks the timing guarantee.
-const DUMMY_HASH = bcrypt.hashSync(
-  'pepnationrx-timing-equalizer',
-  config.security.bcryptRounds
-);
+// account and a wrong password take indistinguishable time. B-06: hashSync
+// blocks the event loop for ~200–400 ms at 12 rounds on every cold start.
+// Use a lazy async pre-warm instead: the first login call triggers the async
+// hash, subsequent calls await the same promise.
+let _dummyHashPromise = null;
+function getDummyHash() {
+  if (!_dummyHashPromise) {
+    _dummyHashPromise = bcrypt.hash(
+      'pepnationrx-timing-equalizer',
+      config.security.bcryptRounds
+    );
+  }
+  return _dummyHashPromise;
+}
+
 
 // Strip the secret column before a user object leaves the service.
 function toPublicUser(row) {
@@ -129,10 +137,12 @@ async function register(input, requestMeta) {
 async function login(input, requestMeta) {
   const row = await userModel.findByEmailWithSecret(input.email);
 
-  // Always run a bcrypt comparison to keep timing constant.
+  // Always run a bcrypt comparison to keep timing constant regardless of
+  // whether the email was found. getDummyHash() returns the lazily-computed
+  // async dummy hash (B-06 fix); never blocks the event loop.
   const passwordOk = await bcrypt.compare(
     input.password,
-    row ? row.password_hash : DUMMY_HASH
+    row ? row.password_hash : await getDummyHash()
   );
 
   if (!row || !passwordOk) {

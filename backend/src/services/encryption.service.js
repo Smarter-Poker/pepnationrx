@@ -34,6 +34,14 @@ function resolveKey() {
       'PHI_ENCRYPTION_KEY must be a 32-byte hex value in production.'
     );
   }
+  // B-05: log a loud warning so staging/CI environments with weak keys are
+  // immediately visible. A predictable key (e.g. "dev" or "test") can be
+  // brute-forced; this makes the risk explicit.
+  // eslint-disable-next-line no-console
+  console.warn(
+    '[SECURITY WARNING] PHI_ENCRYPTION_KEY is not a proper 64-char hex string. ' +
+    'A SHA-256 derived key is in use. NEVER use this in production or staging with real PHI.'
+  );
   return crypto.createHash('sha256').update(String(raw)).digest();
 }
 

@@ -55,8 +55,60 @@ async function findByUserId(userId) {
   return result.rows;
 }
 
+// Update mutable fields on an address row.
+async function update(id, data, client) {
+  return queryOne(
+    'UPDATE addresses ' +
+      'SET line1 = $1, line2 = $2, city = $3, state = $4, postal_code = $5, ' +
+      '    country = $6, updated_at = now() ' +
+      'WHERE id = $7 ' +
+      'RETURNING ' + COLUMNS,
+    [
+      data.line1,
+      data.line2 || null,
+      data.city,
+      data.state,
+      data.postalCode,
+      data.country || 'US',
+      id,
+    ],
+    client
+  );
+}
+
+// Make one address the default for a user. Clears is_default on all other
+// addresses first, then sets it on the target row inside one client session
+// so callers inside a transaction can pass their client.
+async function setDefault(id, userId, client) {
+  const db = client || require('../db/query');
+  // Step 1: strip the default flag from every address this user owns.
+  await (client
+    ? client.query('UPDATE addresses SET is_default = false WHERE user_id = $1', [userId])
+    : db.query('UPDATE addresses SET is_default = false WHERE user_id = $1', [userId]));
+  // Step 2: set the flag on the target address (must belong to the user).
+  return queryOne(
+    'UPDATE addresses SET is_default = true, updated_at = now() ' +
+      'WHERE id = $1 AND user_id = $2 ' +
+      'RETURNING ' + COLUMNS,
+    [id, userId],
+    client
+  );
+}
+
+// Hard-delete an address row. Returns the deleted id so callers can confirm.
+async function remove(id, client) {
+  return queryOne(
+    'DELETE FROM addresses WHERE id = $1 RETURNING id',
+    [id],
+    client
+  );
+}
+
 module.exports = {
   create: create,
   findById: findById,
   findByUserId: findByUserId,
+  update: update,
+  setDefault: setDefault,
+  remove: remove,
 };

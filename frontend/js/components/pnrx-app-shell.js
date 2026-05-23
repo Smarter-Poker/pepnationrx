@@ -37,6 +37,10 @@ import './pnrx-auth.js';
 // Roles permitted to reach the admin dashboard.
 const STAFF_ROLES = ['admin', 'support'];
 
+// Path to the Pep Nation Rx logo (background removed, transparent PNG).
+const PNRX_LOGO_SRC = 'assets/images/logo.png';
+
+
 export class PnrxAppShell extends HTMLElement {
   constructor() {
     super();
@@ -53,7 +57,7 @@ export class PnrxAppShell extends HTMLElement {
       '<header class="pnrx-shell__header">' +
       '<a class="pnrx-shell__brand" href="#/catalog" aria-label="PepNationRX">' +
       '<img class="pnrx-shell__logo" ' +
-      'src="assets/images/pepnationrx-logo.jpg" ' +
+      'src="' + PNRX_LOGO_SRC + '" ' +
       'alt="PepNationRX" />' +
       '</a>' +
       '<nav class="pnrx-shell__nav" id="pnrx-shell-nav"></nav>' +

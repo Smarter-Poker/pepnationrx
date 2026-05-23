@@ -143,6 +143,13 @@ export const CATEGORIES = [
     audience: 'all',
     sortOrder: 12,
   },
+  {
+    slug: 'signature-protocols',
+    name: 'Signature Protocols',
+    summary: 'Branded Multi-Compound Protocol Stacks Engineered For Targeted Optimization.',
+    audience: 'all',
+    sortOrder: 13,
+  },
 ];
 
 // ----------------------------------------------------------------------------
@@ -365,6 +372,71 @@ export const TREATMENTS = [
   t('hormone-lab-panel', 'primary-care', 'Hormone Lab Panel',
     'A Focused Hormone Panel To Guide Testosterone And Hormone Therapy.',
     'device', 'otc', 'available', null, 7900, [1], false),
+
+  // -- Signature Protocols (Phase 1: Launch Today) ---------------------------
+  // Branded multi-compound stacks built on amino acids, coenzymes, vitamins,
+  // and minerals. Each is a single productized protocol, distinct from the
+  // raw single compounds carried elsewhere in the catalog.
+  t('kinetic-protocol', 'signature-protocols', 'The Kinetic Protocol',
+    'An Injectable Glutamine, Arginine, And Carnitine Blend Studied For Athletic Recovery And Cellular Energy.',
+    'injection', 'compounded', 'available', 'longevity', 19900, [1, 3]),
+  t('vaso-drive-protocol', 'signature-protocols', 'The Vaso-Drive Protocol',
+    'An Arginine, Ornithine, And Citrulline Blend Studied For Circulatory Health And Vascular Flow.',
+    'injection', 'compounded', 'available', 'longevity', 19900, [1, 3]),
+  t('metabolic-flux-protocol', 'signature-protocols', 'The Metabolic Flux Protocol',
+    'A Lipotropic MIC Plus B12 Injection Studied As A Co-Therapy For Metabolic And Weight Support.',
+    'injection', 'compounded', 'available', 'weight_management', 14900, [1, 3]),
+  t('lumen-protocol', 'signature-protocols', 'The Lumen Protocol',
+    'A Dual-Vial NAD+ And Glutathione Stack Studied For Cellular Energy And Antioxidant Support.',
+    'injection', 'compounded', 'available', 'longevity', 44900, [1, 3]),
+  t('aegis-protocol', 'signature-protocols', 'The Aegis Protocol',
+    'A Tri-Immune Vitamin C, Zinc, And Glutathione Injection Studied For Antioxidant And Immune Support.',
+    'injection', 'compounded', 'available', 'longevity', 14900, [1, 3]),
+  t('zenith-protocol', 'signature-protocols', 'The Zenith Protocol',
+    'A Theanine, Taurine, And GABA Blend Studied For Calm Focus And Restful Sleep.',
+    'injection', 'compounded', 'available', 'longevity', 12900, [1, 3]),
+  t('kera-matrix-protocol', 'signature-protocols', 'The Kera-Matrix Protocol',
+    'A High-Dose Biotin And B5 Stack Studied For Hair, Skin, And Follicular Support.',
+    'injection', 'compounded', 'available', null, 12900, [1, 3]),
+];
+
+// ----------------------------------------------------------------------------
+// PHASE 2 SIGNATURE PROTOCOLS - "Build But Hide" (UI-dormant).
+// ----------------------------------------------------------------------------
+// Next-generation peptide and metabolic protocol stacks. These are fully
+// mapped here and seeded into the database (migration 0008) with
+// is_active = FALSE, so they are present but not browsable or purchasable.
+// They are intentionally kept OUT of the TREATMENTS array so the catalog
+// component never renders them. To launch a Phase 2 stack: move its entry
+// into TREATMENTS above and flip its treatments.is_active to TRUE in the DB.
+export const PHASE_2_PROTOCOLS = [
+  t('wolverine-protocol', 'signature-protocols', 'The Wolverine Protocol',
+    'A BPC-157 And TB-500 Peptide Stack Studied For Tissue Repair And Recovery.',
+    'injection', 'compounded', 'coming_soon', 'peptide_therapy', 34900, [1, 3]),
+  t('glow-protocol', 'signature-protocols', 'The Glow Protocol',
+    'A GHK-Cu, BPC-157, And TB-500 Blend Studied For Soft-Tissue Repair And Skin Renewal.',
+    'injection', 'compounded', 'coming_soon', 'peptide_therapy', 44900, [1, 3]),
+  t('klow-protocol', 'signature-protocols', 'The Klow Protocol',
+    'The Glow Blend Plus KPV, Studied For Structural Repair And Anti-Inflammatory Support.',
+    'injection', 'compounded', 'coming_soon', 'peptide_therapy', 49900, [1, 3]),
+  t('neuro-apex-protocol', 'signature-protocols', 'The Neuro-Apex Protocol',
+    'A Semax And Selank Pairing Studied For Focus And A Balanced Stress Response.',
+    'nasal_spray', 'compounded', 'coming_soon', 'peptide_therapy', 29900, [1, 3]),
+  t('chronos-protocol', 'signature-protocols', 'The Chronos Protocol',
+    'An Epitalon And DSIP Stack Studied For Deep Sleep And Cellular Longevity.',
+    'injection', 'compounded', 'coming_soon', 'peptide_therapy', 39900, [1, 3]),
+  t('titan-protocol', 'signature-protocols', 'The Titan Protocol',
+    'A Retatrutide Triple-Receptor Agonist Studied For Significant Metabolic Weight Loss.',
+    'injection', 'compounded', 'coming_soon', 'weight_management', 49900, [1, 3]),
+  t('apex-dual-protocol', 'signature-protocols', 'The Apex-Dual Protocol',
+    'A Cagrilintide And Semaglutide Stack Studied For Appetite Control And Plateau Breaking.',
+    'injection', 'compounded', 'coming_soon', 'weight_management', 44900, [1, 3]),
+  t('hepatic-flux-protocol', 'signature-protocols', 'The Hepatic Flux Protocol',
+    'A Survodutide Glucagon And GLP-1 Dual Agonist Studied For Metabolic And Hepatic Support.',
+    'injection', 'compounded', 'coming_soon', 'weight_management', 39900, [1, 3]),
+  t('myo-preserve-protocol', 'signature-protocols', 'The Myo-Preserve Protocol',
+    'An Activin Receptor Modulator Studied For Lean-Mass Preservation During Weight Loss.',
+    'injection', 'compounded', 'coming_soon', 'weight_management', 59900, [1, 3]),
 ];
 
 // ----------------------------------------------------------------------------

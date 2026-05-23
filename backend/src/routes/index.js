@@ -13,6 +13,7 @@ const { query } = require('../db/query');
 const authRoutes = require('./auth.routes');
 const intakeRoutes = require('./intake.routes');
 const checkoutRoutes = require('./checkout.routes');
+const checkinRoutes = require('./checkin.routes');
 const patientRoutes = require('./patient.routes');
 const affiliateRoutes = require('./affiliate.routes');
 const adminRoutes = require('./admin.routes');
@@ -44,6 +45,9 @@ router.get('/health/ready', async (req, res) => {
 router.use('/auth', authRoutes);
 router.use('/intake', intakeRoutes);
 router.use('/checkout', checkoutRoutes);
+// Check-in routes are mounted at '/' because their paths (/subscriptions/…
+// and /checkins/…) are already fully qualified inside checkin.routes.js.
+router.use('/', checkinRoutes);
 router.use('/patient', patientRoutes);
 router.use('/affiliate', affiliateRoutes);
 router.use('/admin', adminRoutes);

@@ -15,11 +15,13 @@ const COLUMNS =
   'id, user_id, external_provider_id, full_name, npi_number, ' +
   'credentials, licensed_states, is_active, created_at, updated_at';
 
-// Find a provider by the id the medical network uses for them.
-async function findByExternalId(externalProviderId) {
+// Find a provider by the id the medical network uses for them. An optional
+// `client` runs the query on an open transaction connection.
+async function findByExternalId(externalProviderId, client) {
   return queryOne(
     'SELECT ' + COLUMNS + ' FROM providers WHERE external_provider_id = $1',
-    [externalProviderId]
+    [externalProviderId],
+    client
   );
 }
 
@@ -30,8 +32,10 @@ async function findById(id) {
 
 // Resolve a provider by external id, inserting a local record if none exists.
 // The unique constraint on external_provider_id makes the upsert race-safe.
-async function findOrCreateByExternalId(data) {
-  const existing = await findByExternalId(data.externalProviderId);
+// An optional `client` runs both the SELECT and INSERT on the same transaction
+// connection, so the upsert is part of an atomic unit (B-11).
+async function findOrCreateByExternalId(data, client) {
+  const existing = await findByExternalId(data.externalProviderId, client);
   if (existing) return existing;
   return queryOne(
     'INSERT INTO providers ' +
@@ -45,7 +49,8 @@ async function findOrCreateByExternalId(data) {
       data.npiNumber || null,
       data.credentials || null,
       data.licensedStates || [],
-    ]
+    ],
+    client
   );
 }
 

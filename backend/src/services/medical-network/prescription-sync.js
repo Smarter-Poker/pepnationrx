@@ -91,20 +91,26 @@ async function applySignedPrescription(payload) {
   }
 
   const rx = payload.prescription || {};
-  const provider = await providerModel.findOrCreateByExternalId({
-    externalProviderId: payload.provider && payload.provider.externalId,
-    fullName: payload.provider && payload.provider.fullName,
-    npiNumber: payload.provider && payload.provider.npi,
-    credentials: payload.provider && payload.provider.credentials,
-    licensedStates: (payload.provider && payload.provider.licensedStates) || [],
-  });
+  // B-11: providerModel.findOrCreateByExternalId is an upsert that can INSERT.
+  // Running it outside the prescription transaction risks an orphaned provider
+  // row if the transaction later rolls back. Move it inside the transaction
+  // so it commits or rolls back as part of the same unit of work.
 
-  // The prescription insert and the intake-status advance must be atomic, so
-  // both run on the transaction's client - a failure after the insert rolls
-  // the prescription back rather than orphaning it against a stale intake.
   let prescription;
   try {
     prescription = await withTransaction(async function (client) {
+      // B-11: run the provider upsert inside the transaction so a rollback
+      // doesn't leave an orphaned provider row.
+      const provider = await providerModel.findOrCreateByExternalId(
+        {
+          externalProviderId: payload.provider && payload.provider.externalId,
+          fullName: payload.provider && payload.provider.fullName,
+          npiNumber: payload.provider && payload.provider.npi,
+          credentials: payload.provider && payload.provider.credentials,
+          licensedStates: (payload.provider && payload.provider.licensedStates) || [],
+        },
+        client
+      );
       const created = await prescriptionModel.create(
         {
           userId: submission.user_id,
@@ -188,15 +194,20 @@ async function applyReviewDecision(payload) {
     });
     return null;
   }
-  await intakeModel.updateStatus(submission.id, status);
 
-  await audit.record({
-    actorUserId: submission.user_id,
-    action: 'intake.review_decision',
-    entityType: 'intake_submission',
-    entityId: submission.id,
-    phiAccessed: true,
-    metadata: { decision: status },
+  // B-08: wrap both the status update and the audit record in a single
+  // transaction. Without this, a crash between the two leaves the intake
+  // status changed but no audit event — a HIPAA compliance gap.
+  await withTransaction(async function (client) {
+    await intakeModel.updateStatus(submission.id, status, client);
+    await audit.record({
+      actorUserId: submission.user_id,
+      action: 'intake.review_decision',
+      entityType: 'intake_submission',
+      entityId: submission.id,
+      phiAccessed: true,
+      metadata: { decision: status },
+    });
   });
 
   return intakeModel.findById(submission.id);

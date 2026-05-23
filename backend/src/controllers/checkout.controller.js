@@ -132,7 +132,10 @@ async function place(req, res, next) {
     // Compute the tri-party split. The gross is the full plan price (the
     // catalog per-month price times the cadence); the consult fee is flat per
     // charge and the management fee is a percent of the gross.
-    const grossAmountCents = plan.price_cents * input.cadenceMonths;
+    // B-09: pg returns NUMERIC columns as JS strings; coerce to integer before
+    // multiplying so computeSplit always receives a whole-number gross.
+    const priceCentsInt = Math.round(Number(plan.price_cents));
+    const grossAmountCents = priceCentsInt * input.cadenceMonths;
     const consultFeeCents = constants.FEE_SPLIT.consultFeeCents;
     const managementFeeCents = Math.round(
       (grossAmountCents * constants.FEE_SPLIT.managementFeePct) / 100
@@ -144,8 +147,15 @@ async function place(req, res, next) {
     });
 
     const stripe = config.integrations.stripe;
+    // N-01: 'unconfigured' would be silently stored in production. Fail
+    // fast at request time instead of committing a garbage value to the DB.
     const merchantOfRecord =
-      stripe.medicalPracticeAccountId || stripe.platformAccountId || 'unconfigured';
+      stripe.medicalPracticeAccountId || stripe.platformAccountId;
+    if (!merchantOfRecord) {
+      throw errors.unprocessable(
+        'Payment processing is not yet configured. Please contact support.'
+      );
+    }
 
     // Persist the consent rows, the shipping address, the subscription, and
     // the transaction as one unit. A failure partway through rolls every write
@@ -178,10 +188,13 @@ async function place(req, res, next) {
           userId: req.user.id,
           protocolCategory: protocolCategory,
           planName: plan.plan_name,
-          mrrCents: plan.price_cents,
+          mrrCents: priceCentsInt,
           currency: 'USD',
           affiliateId: affiliateId,
           treatmentPlanId: plan.plan_id,
+          // W-05: link the subscription to the intake that preceded it so the
+          // clinical audit trail from intake → subscription is preserved.
+          intakeSubmissionId: input.intakeSubmissionId || null,
         },
         client
       );
@@ -262,7 +275,7 @@ async function place(req, res, next) {
         managementFeeCents: split.managementFeeCents,
         medicalRevenueCents: split.medicalRevenueCents,
         cadenceMonths: input.cadenceMonths,
-        pricePerMonthCents: plan.price_cents,
+        pricePerMonthCents: priceCentsInt,
         currency: 'USD',
       },
     });

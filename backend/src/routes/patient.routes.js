@@ -16,4 +16,20 @@ const router = express.Router();
 // prescriptions, orders, and billing.
 router.get('/dashboard', authenticate, patientController.dashboard);
 
+// G-01: cancel a subscription the patient owns.
+router.delete(
+  '/subscriptions/:subscriptionId',
+  authenticate,
+  patientController.cancelSubscription
+);
+
+// G-02: address management.
+router.patch('/addresses/:addressId', authenticate, patientController.updateAddress);
+router.post(
+  '/addresses/:addressId/set-default',
+  authenticate,
+  patientController.setDefaultAddress
+);
+router.delete('/addresses/:addressId', authenticate, patientController.deleteAddress);
+
 module.exports = router;

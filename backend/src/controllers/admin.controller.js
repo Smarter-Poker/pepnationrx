@@ -65,7 +65,11 @@ async function dashboard(req, res, next) {
 async function auditLog(req, res, next) {
   try {
     const requested = Number.parseInt(req.query.limit, 10);
-    const limit = Number.isInteger(requested) ? requested : 50;
+    // Clamp to 1–500: negative values are valid SQL (returns all rows) and
+    // arbitrarily large values can DoS the database. B-02 / B-13.
+    const limit = Number.isInteger(requested)
+      ? Math.max(1, Math.min(requested, 500))
+      : 50;
     const entries = await adminModel.recentAuditLog(limit);
 
     const meta = requestMeta(req);

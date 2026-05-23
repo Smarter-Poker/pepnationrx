@@ -20,12 +20,16 @@ function computeHmac(rawBody, secret) {
   return crypto.createHmac('sha256', secret).update(buffer).digest('hex');
 }
 
-// Constant-time comparison of two signature strings.
+// Constant-time comparison of two signature strings. Both inputs are padded
+// to the same length before calling timingSafeEqual so a length mismatch does
+// not leak the expected length as a timing side-channel. B-03.
 function safeEqual(a, b) {
   const bufferA = Buffer.from(String(a || ''), 'utf8');
   const bufferB = Buffer.from(String(b || ''), 'utf8');
-  if (bufferA.length !== bufferB.length) return false;
-  return crypto.timingSafeEqual(bufferA, bufferB);
+  const maxLen = Math.max(bufferA.length, bufferB.length);
+  const paddedA = Buffer.concat([bufferA, Buffer.alloc(maxLen - bufferA.length)]);
+  const paddedB = Buffer.concat([bufferB, Buffer.alloc(maxLen - bufferB.length)]);
+  return crypto.timingSafeEqual(paddedA, paddedB) && bufferA.length === bufferB.length;
 }
 
 // Verify a webhook signature.

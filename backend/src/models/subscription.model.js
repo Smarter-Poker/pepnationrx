@@ -14,8 +14,10 @@ const { query, queryOne } = require('../db/query');
 const COLUMNS =
   'id, user_id, protocol_category, plan_name, status, stripe_subscription_id, ' +
   'mrr_cents, currency, refill_count, refills_remaining, current_period_start, ' +
-  'current_period_end, next_billing_date, affiliate_id, treatment_plan_id, ' +
+  'current_period_end, next_billing_date, affiliate_id, ' +
   'started_at, paused_at, canceled_at, created_at, updated_at';
+  // Note: treatment_plan_id and intake_submission_id are not yet in the DB
+  // schema. Add them via migration before selecting them here.
 
 // Subscription statuses that count as live revenue.
 const ACTIVE_STATUSES = ['trialing', 'active', 'past_due'];
@@ -31,9 +33,8 @@ async function create(data, client) {
   return queryOne(
     'INSERT INTO subscriptions ' +
       '(user_id, protocol_category, plan_name, status, mrr_cents, currency, ' +
-      ' refill_count, refills_remaining, next_billing_date, affiliate_id, ' +
-      ' treatment_plan_id) ' +
-      'VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) ' +
+      ' refill_count, refills_remaining, next_billing_date, affiliate_id) ' +
+      'VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) ' +
       'RETURNING ' + COLUMNS,
     [
       data.userId,
@@ -46,7 +47,6 @@ async function create(data, client) {
       Number.isInteger(data.refillsRemaining) ? data.refillsRemaining : 0,
       data.nextBillingDate || null,
       data.affiliateId || null,
-      data.treatmentPlanId || null,
     ],
     client
   );
@@ -128,6 +128,18 @@ async function markPastDue(id) {
   );
 }
 
+// Cancel a subscription. A no-op (returns null) when the subscription is
+// already canceled or expired, letting the caller decide how to surface that.
+async function cancel(subscriptionId, client) {
+  return queryOne(
+    'UPDATE subscriptions SET status = $1, canceled_at = now(), updated_at = now() ' +
+      'WHERE id = $2 AND status NOT IN ($3, $4) ' +
+      'RETURNING ' + COLUMNS,
+    ['canceled', subscriptionId, 'canceled', 'expired'],
+    client
+  );
+}
+
 module.exports = {
   ACTIVE_STATUSES: ACTIVE_STATUSES,
   create: create,
@@ -139,4 +151,5 @@ module.exports = {
   findDueForBilling: findDueForBilling,
   advanceBillingDate: advanceBillingDate,
   markPastDue: markPastDue,
+  cancel: cancel,
 };

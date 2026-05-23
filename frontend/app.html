@@ -3,7 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PepNationRX - Telehealth Platform</title>
+  <title>Pep Nation Rx - Telehealth Platform</title>
+  <meta name="description" content="Pep Nation Rx connects patients with independent, licensed healthcare providers for convenient, affordable telehealth services." />
+
+  <!-- Inter typeface -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
   <!-- Foundational design tokens, then every component stylesheet. -->
   <link rel="stylesheet" href="css/variables.css" />
@@ -17,8 +23,7 @@
   <link rel="stylesheet" href="css/components/toast.css" />
 
   <style>
-    /* The application owns the full viewport. The shell supplies its own
-       layout; this only resets the document. */
+    *, *::before, *::after { box-sizing: border-box; }
     html, body {
       margin: 0;
       padding: 0;
@@ -26,15 +31,13 @@
       background: var(--color-bg);
       color: var(--color-text-primary);
       font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
   </style>
 </head>
 <body>
-  <!-- The application shell mounts the router, header, and footer. It imports
-       every feature component, so this single module is the only script the
-       page needs. -->
   <pnrx-app-shell></pnrx-app-shell>
-
   <script type="module" src="js/components/pnrx-app-shell.js"></script>
 </body>
 </html>

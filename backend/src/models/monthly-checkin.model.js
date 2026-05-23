@@ -57,8 +57,13 @@ async function hasOpenCheckin(subscriptionId) {
 }
 
 // Mark every 'due' check-in whose due_date is before the cutoff as 'missed'.
-// Returns the number of rows updated.
+// Returns the number of rows updated. B-14: a null/undefined cutoffDate
+// would cause due_date < NULL to evaluate as NULL in PostgreSQL, silently
+// updating zero rows and causing the job to no-op without any error.
 async function markOverdueMissed(cutoffDate) {
+  if (cutoffDate === null || cutoffDate === undefined || cutoffDate === '') {
+    throw new Error('markOverdueMissed: cutoffDate is required.');
+  }
   const result = await query(
     "UPDATE monthly_checkins SET status = 'missed' " +
       "WHERE status = 'due' AND due_date < $1",
@@ -67,10 +72,34 @@ async function markOverdueMissed(cutoffDate) {
   return result.rowCount;
 }
 
+// All check-ins for a subscription, newest first.
+async function findBySubscriptionId(subscriptionId) {
+  const result = await query(
+    'SELECT ' + COLUMNS + ' FROM monthly_checkins WHERE subscription_id = $1 ' +
+      'ORDER BY created_at DESC',
+    [subscriptionId]
+  );
+  return result.rows;
+}
+
+// Mark a check-in submitted and store the (already-encrypted) answers buffer.
+async function submit(checkinId, answersEncrypted) {
+  return queryOne(
+    "UPDATE monthly_checkins SET status = 'submitted', answers_encrypted = $2, " +
+      'submitted_at = now(), updated_at = now() ' +
+      'WHERE id = $1 ' +
+      'RETURNING ' + COLUMNS,
+    [checkinId, answersEncrypted]
+  );
+}
+
+
 module.exports = {
   OPEN_STATUSES: OPEN_STATUSES,
   create: create,
   findById: findById,
+  findBySubscriptionId: findBySubscriptionId,
   hasOpenCheckin: hasOpenCheckin,
   markOverdueMissed: markOverdueMissed,
+  submit: submit,
 };
