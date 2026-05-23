@@ -38,16 +38,19 @@ app.use(
       }
       // With no allowlist configured, permit any browser origin in
       // development for convenience, but fail closed in production so a
-      // missing CORS_ORIGINS env var cannot silently open the API.
+      // missing CORS_ORIGINS env var cannot silently open the API. A
+      // disallowed origin resolves with `false` (no CORS headers, so the
+      // browser blocks the response) rather than throwing - throwing turns
+      // an ordinary cross-origin rejection into a logged 500.
       if (config.corsOrigins.length === 0) {
         return config.isProduction
-          ? callback(new Error('Origin not permitted by CORS policy.'))
+          ? callback(null, false)
           : callback(null, true);
       }
       if (config.corsOrigins.includes(origin)) {
         return callback(null, true);
       }
-      return callback(new Error('Origin not permitted by CORS policy.'));
+      return callback(null, false);
     },
     credentials: true,
   })

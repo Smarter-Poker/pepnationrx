@@ -79,24 +79,38 @@ async function register(input, requestMeta) {
   // Create the account and issue its first session on one transaction: a
   // failure issuing tokens rolls the user insert back rather than leaving an
   // orphaned account that can never be registered again.
-  const { user, tokens } = await withTransaction(async (client) => {
-    const created = await userModel.create(
-      {
-        email: input.email,
-        phone: input.phone,
-        passwordHash: passwordHash,
-        role: 'patient',
-        firstName: input.firstName,
-        lastName: input.lastName,
-        dateOfBirth: input.dateOfBirth,
-        sexAtBirth: input.sexAtBirth,
-        state: input.state,
-      },
-      client
-    );
-    const issued = await issueTokenPair(created, requestMeta, client);
-    return { user: created, tokens: issued };
-  });
+  let user;
+  let tokens;
+  try {
+    const session = await withTransaction(async (client) => {
+      const created = await userModel.create(
+        {
+          email: input.email,
+          phone: input.phone,
+          passwordHash: passwordHash,
+          role: 'patient',
+          firstName: input.firstName,
+          lastName: input.lastName,
+          dateOfBirth: input.dateOfBirth,
+          sexAtBirth: input.sexAtBirth,
+          state: input.state,
+        },
+        client
+      );
+      const issued = await issueTokenPair(created, requestMeta, client);
+      return { user: created, tokens: issued };
+    });
+    user = session.user;
+    tokens = session.tokens;
+  } catch (err) {
+    // A concurrent registration can slip past the emailExists check above and
+    // trip the users_email unique constraint (SQLSTATE 23505). Surface that as
+    // a 409 conflict rather than letting it fall through as a generic 500.
+    if (err && err.code === '23505') {
+      throw errors.conflict('An account with this email already exists.');
+    }
+    throw err;
+  }
 
   await audit.record({
     actorUserId: user.id,

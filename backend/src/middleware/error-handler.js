@@ -35,6 +35,23 @@ function errorHandler(err, req, res, next) {
     return res.status(err.statusCode).json(body);
   }
 
+  // Library errors (the JSON body parser and similar) carry an HTTP status.
+  // Honor a client-error status so malformed or oversized input is reported
+  // as a 4xx instead of being masked as a 500; the message stays generic so
+  // no internal detail leaks.
+  const libStatus = err && (err.statusCode || err.status);
+  if (Number.isInteger(libStatus) && libStatus >= 400 && libStatus < 500) {
+    let code = 'bad_request';
+    if (err.type === 'entity.parse.failed') {
+      code = 'malformed_json';
+    } else if (err.type === 'entity.too.large') {
+      code = 'payload_too_large';
+    }
+    return res.status(libStatus).json({
+      error: { code: code, message: 'The request could not be processed.' },
+    });
+  }
+
   // Unknown error: log the full detail server-side, return a generic message.
   logger.error('Unhandled error', {
     message: err && err.message,

@@ -10,6 +10,7 @@
 const config = require('../config/env');
 const authService = require('../services/auth.service');
 const userModel = require('../models/user.model');
+const errors = require('../utils/errors');
 
 // Name of the httpOnly cookie that carries the refresh token.
 const REFRESH_COOKIE = 'pnrx_refresh';
@@ -100,6 +101,10 @@ async function logout(req, res, next) {
 async function me(req, res, next) {
   try {
     const user = await userModel.findById(req.user.id);
+    if (!user) {
+      // The token was valid but the account was removed since it was issued.
+      return next(errors.unauthorized('Account no longer exists.'));
+    }
     res.status(200).json({ user: user });
   } catch (err) {
     next(err);
