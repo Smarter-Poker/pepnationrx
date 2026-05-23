@@ -231,9 +231,26 @@ export class PnrxCheckout extends PnrxComponent {
       '. A Licensed Provider Reviews Your Intake Before Any Charge Settles.' +
       '</p>' +
       error +
+      '<div class="pnrx-checkout__trust">' +
+      '<div class="pnrx-checkout__trust-item">' +
+      '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>' +
+      '<span>HIPAA Compliant</span>' +
+      '</div>' +
+      '<div class="pnrx-checkout__trust-item">' +
+      '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' +
+      '<span>SSL Encrypted</span>' +
+      '</div>' +
+      '<div class="pnrx-checkout__trust-item">' +
+      '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>' +
+      '<span>Discreet Shipping</span>' +
+      '</div>' +
+      '</div>' +
       '<button type="button" class="pnrx-checkout__cta" data-action="submit"' +
       (this.canSubmit() ? '' : ' disabled') +
       '>' +
+      (this.state.submitting
+        ? '<span class="pnrx-spinner pnrx-spinner--sm"></span> '
+        : '') +
       buttonLabel +
       '</button>' +
       '<p class="pnrx-checkout__legal">No Card Is Charged On This Screen. ' +

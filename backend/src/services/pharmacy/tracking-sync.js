@@ -10,6 +10,11 @@
 const logger = require('../../utils/logger');
 const pharmacyOrderModel = require('../../models/pharmacy-order.model');
 const audit = require('../audit.service');
+const notificationService = require('../notification');
+
+// Order milestones a patient is notified about. Intermediate states
+// (queued, submitted, accepted, compounding) are not emailed to avoid noise.
+const NOTIFY_STATUSES = ['shipped', 'delivered', 'exception'];
 
 // Valid pharmacy_order_status values, mirrored from database/schema.sql.
 const ORDER_STATUSES = [
@@ -63,6 +68,21 @@ async function applyTrackingUpdate(payload) {
     entityId: order.id,
     metadata: { status: status },
   });
+
+  // Notify the patient on meaningful shipping milestones only. The dedupe key
+  // ties the email to this order and status, so a webhook replay - or a
+  // repeated status - never sends a second email for the same milestone.
+  if (NOTIFY_STATUSES.indexOf(status) !== -1) {
+    await notificationService.send({
+      userId: order.user_id,
+      template: 'shipment_update',
+      payload: {
+        status: status,
+        trackingNumber: payload.trackingNumber || '',
+      },
+      dedupeKey: 'shipment:' + order.id + ':' + status,
+    });
+  }
 
   return updated;
 }

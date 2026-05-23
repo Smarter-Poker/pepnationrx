@@ -216,3 +216,60 @@ pnrx-auth {
 }
 
 .pnrx-auth__link:hover { color: var(--teal-400); }
+
+/* ── Trust signals ───────────────────────────────────────────────────────── */
+.pnrx-auth__trust {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-6);
+  margin-top: var(--space-5);
+  flex-wrap: wrap;
+}
+
+.pnrx-auth__trust-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--canvas-400);
+  white-space: nowrap;
+}
+
+.pnrx-auth__trust-item svg {
+  color: var(--teal-500);
+  flex-shrink: 0;
+}
+
+/* ── State select dropdown ───────────────────────────────────────────────── */
+.pnrx-auth__select {
+  width: 100%;
+  padding: 12px var(--space-4);
+  font-family: var(--font-sans);
+  font-size: var(--text-md);
+  color: var(--canvas-700);
+  background: var(--white);
+  border: 1.5px solid var(--canvas-200);
+  border-radius: var(--radius-md);
+  outline: none;
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    box-shadow   var(--duration-fast) var(--ease-standard);
+  box-sizing: border-box;
+}
+
+.pnrx-auth__select:focus {
+  border-color: var(--teal-500);
+  box-shadow: 0 0 0 3px rgba(22, 160, 140, 0.14);
+}
+
+/* ── Inline spinner (small, for buttons) ─────────────────────────────────── */
+.pnrx-spinner--sm {
+  width: 16px;
+  height: 16px;
+  border-width: 2px;
+  vertical-align: middle;
+  margin-right: var(--space-2);
+}
+

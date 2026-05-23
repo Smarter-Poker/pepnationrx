@@ -60,6 +60,13 @@ export class PnrxAppShell extends HTMLElement {
       'src="' + PNRX_LOGO_SRC + '" ' +
       'alt="PepNationRX" />' +
       '</a>' +
+      '<button class="pnrx-shell__hamburger" aria-label="Menu" aria-expanded="false">' +
+      '<svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24">' +
+      '<line x1="3" y1="6" x2="21" y2="6"/>' +
+      '<line x1="3" y1="12" x2="21" y2="12"/>' +
+      '<line x1="3" y1="18" x2="21" y2="18"/>' +
+      '</svg>' +
+      '</button>' +
       '<nav class="pnrx-shell__nav" id="pnrx-shell-nav"></nav>' +
       '</header>' +
       '<main class="pnrx-shell__outlet" id="pnrx-shell-outlet"></main>' +
@@ -82,6 +89,17 @@ export class PnrxAppShell extends HTMLElement {
 
     this.outlet = this.querySelector('#pnrx-shell-outlet');
     this.navEl = this.querySelector('#pnrx-shell-nav');
+
+    // Mobile hamburger toggle
+    var hamburger = this.querySelector('.pnrx-shell__hamburger');
+    var nav = this.querySelector('#pnrx-shell-nav');
+    if (hamburger) {
+      hamburger.addEventListener('click', function () {
+        var expanded = hamburger.getAttribute('aria-expanded') === 'true';
+        hamburger.setAttribute('aria-expanded', String(!expanded));
+        nav.classList.toggle('is-open');
+      });
+    }
 
     this.router = createRouter({
       outlet: this.outlet,

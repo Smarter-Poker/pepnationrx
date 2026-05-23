@@ -37,6 +37,23 @@ function compoundLabel(compound) {
   return 'Compounded';
 }
 
+// SVG icon map keyed by category slug. Each icon is a 24x24 stroke-based SVG.
+const CATEGORY_ICONS = {
+  'weight-management': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 8l2-2h10l2 2"/><rect x="3" y="8" width="4" height="8" rx="1"/><rect x="17" y="8" width="4" height="8" rx="1"/></svg>',
+  'sexual-health': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 12.572l-7.5 7.428-7.5-7.428a5 5 0 1 1 7.5-6.566 5 5 0 1 1 7.5 6.566z"/></svg>',
+  'testosterone': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M21 3l-7.5 7.5"/><circle cx="9" cy="15" r="6"/></svg>',
+  'womens-hormone': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M12 14v7"/><path d="M9 18h6"/></svg>',
+  'birth-control': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>',
+  'hair': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.5 2 4 6 4 10c0 3 1.5 5 3 6v4a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-4c1.5-1 3-3 3-6 0-4-2.5-8-8-8z"/><path d="M9 22v-6"/><path d="M15 22v-6"/></svg>',
+  'skin': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z"/><path d="M12 3c-2 3-3 6-3 9s1 6 3 9"/><path d="M12 3c2 3 3 6 3 9s-1 6-3 9"/><path d="M3 12h18"/></svg>',
+  'mental-health': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-7 7c0 3 2 5 4 7l3 5 3-5c2-2 4-4 4-7a7 7 0 0 0-7-7z"/><circle cx="12" cy="9" r="2"/></svg>',
+  'sleep': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
+  'peptide-therapy': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6v2H9z"/><rect x="7" y="5" width="10" height="16" rx="2"/><path d="M10 10h4"/><path d="M10 14h4"/></svg>',
+  'longevity': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v4"/><path d="M12 18v4"/><path d="M4.93 4.93l2.83 2.83"/><path d="M16.24 16.24l2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="M4.93 19.07l2.83-2.83"/><path d="M16.24 7.76l2.83-2.83"/></svg>',
+  'primary-care': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 3v18"/></svg>',
+  'signature-protocols': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+};
+
 export class PnrxCatalog extends PnrxComponent {
   constructor() {
     super();
@@ -134,10 +151,15 @@ export class PnrxCatalog extends PnrxComponent {
 
     const cards = categoriesForAudience(audience)
       .map(function (category) {
+        const iconSvg = CATEGORY_ICONS[category.slug] || '';
+        const iconHtml = iconSvg
+          ? '<span class="pnrx-catalog__card-icon">' + iconSvg + '</span>'
+          : '';
         return (
           '<button type="button" class="pnrx-catalog__card" data-category="' +
           escapeHtml(category.slug) +
           '">' +
+          iconHtml +
           '<span class="pnrx-catalog__card-title">' +
           escapeHtml(category.name) +
           '</span>' +
@@ -149,7 +171,44 @@ export class PnrxCatalog extends PnrxComponent {
       })
       .join('');
 
+    // Hero section
+    const hero =
+      '<section class="pnrx-hero">' +
+      '<div class="pnrx-hero__content">' +
+      '<span class="pnrx-hero__eyebrow">CLINICIAN-REVIEWED TELEHEALTH</span>' +
+      '<h1 class="pnrx-hero__h1">Premium Care,<br>Delivered To Your Door</h1>' +
+      '<p class="pnrx-hero__sub">Board-Certified Providers. FDA-Regulated Medications. Discreet Shipping. No Insurance Needed.</p>' +
+      '<a class="pnrx-hero__cta" href="#/intake">Start Your Intake</a>' +
+      '</div>' +
+      '</section>';
+
+    // Trust bar
+    const trust =
+      '<div class="pnrx-trust">' +
+      '<div class="pnrx-trust__item">' +
+      '<span class="pnrx-trust__number">50</span>' +
+      '<span class="pnrx-trust__label">States Licensed</span>' +
+      '</div>' +
+      '<div class="pnrx-trust__divider"></div>' +
+      '<div class="pnrx-trust__item">' +
+      '<span class="pnrx-trust__number">100%</span>' +
+      '<span class="pnrx-trust__label">HIPAA Compliant</span>' +
+      '</div>' +
+      '<div class="pnrx-trust__divider"></div>' +
+      '<div class="pnrx-trust__item">' +
+      '<span class="pnrx-trust__number">Board-Certified</span>' +
+      '<span class="pnrx-trust__label">Licensed Providers</span>' +
+      '</div>' +
+      '<div class="pnrx-trust__divider"></div>' +
+      '<div class="pnrx-trust__item">' +
+      '<span class="pnrx-trust__number">Free</span>' +
+      '<span class="pnrx-trust__label">Discreet Shipping</span>' +
+      '</div>' +
+      '</div>';
+
     return (
+      hero +
+      trust +
       '<header class="pnrx-catalog__head">' +
       '<h2 class="pnrx-catalog__title">Browse Treatments</h2>' +
       '<p class="pnrx-catalog__sub">Clinician-Reviewed Care, Delivered To Your ' +

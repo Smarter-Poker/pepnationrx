@@ -18,7 +18,13 @@ import { money, formatDate, humanize } from '../utils/format.js';
 export class PnrxPatientDashboard extends PnrxComponent {
   constructor() {
     super();
-    this.state = { status: 'loading', data: null, error: null };
+    this.state = {
+      status: 'loading',
+      data: null,
+      error: null,
+      prefs: { emailEnabled: true, smsEnabled: false },
+      prefsSaved: false,
+    };
   }
 
   connectedCallback() {
@@ -33,7 +39,16 @@ export class PnrxPatientDashboard extends PnrxComponent {
     this.setState({ status: 'loading', error: null });
     try {
       const data = await api.get('/api/patient/dashboard');
-      this.setState({ status: 'ready', data: data });
+      // Notification preferences are non-critical: a failure here falls back
+      // to the platform defaults rather than failing the whole dashboard.
+      let prefs = { emailEnabled: true, smsEnabled: false };
+      try {
+        const pr = await api.get('/api/patient/notification-preferences');
+        if (pr && pr.preferences) prefs = pr.preferences;
+      } catch (prefErr) {
+        prefs = { emailEnabled: true, smsEnabled: false };
+      }
+      this.setState({ status: 'ready', data: data, prefs: prefs });
     } catch (err) {
       this.setState({
         status: 'error',
@@ -62,9 +77,24 @@ export class PnrxPatientDashboard extends PnrxComponent {
   }
 
   renderLoading() {
+    // Animated skeleton screen matching dashboard card layout
+    const skelCard =
+      '<div class="pnrx-dash__skel-card">' +
+      '<div class="pnrx-dash__skel pnrx-dash__skel--title"></div>' +
+      '<div class="pnrx-dash__skel pnrx-dash__skel--row"></div>' +
+      '<div class="pnrx-dash__skel pnrx-dash__skel--row"></div>' +
+      '</div>';
     return (
-      '<div class="pnrx-dash__state">' +
-      '<p class="pnrx-dash__state-text">Loading Your Dashboard</p>' +
+      '<div class="pnrx-dash__skeleton">' +
+      '<div class="pnrx-dash__skel pnrx-dash__skel--heading"></div>' +
+      '<div class="pnrx-dash__skel pnrx-dash__skel--sub"></div>' +
+      '<div class="pnrx-dash__stats">' +
+      '<div class="pnrx-dash__stat pnrx-dash__stat--skel"><div class="pnrx-dash__skel pnrx-dash__skel--value"></div><div class="pnrx-dash__skel pnrx-dash__skel--label"></div></div>' +
+      '<div class="pnrx-dash__stat pnrx-dash__stat--skel"><div class="pnrx-dash__skel pnrx-dash__skel--value"></div><div class="pnrx-dash__skel pnrx-dash__skel--label"></div></div>' +
+      '<div class="pnrx-dash__stat pnrx-dash__stat--skel"><div class="pnrx-dash__skel pnrx-dash__skel--value"></div><div class="pnrx-dash__skel pnrx-dash__skel--label"></div></div>' +
+      '<div class="pnrx-dash__stat pnrx-dash__stat--skel"><div class="pnrx-dash__skel pnrx-dash__skel--value"></div><div class="pnrx-dash__skel pnrx-dash__skel--label"></div></div>' +
+      '</div>' +
+      skelCard + skelCard +
       '</div>'
     );
   }
@@ -96,6 +126,7 @@ export class PnrxPatientDashboard extends PnrxComponent {
       this.renderPrescriptions(data.prescriptions || []) +
       this.renderOrders(data.orders || []) +
       this.renderBilling(data.billing || {}) +
+      this.renderNotificationPrefs() +
       '<p class="pnrx-dash__legal">All Clinical Services Are Provided By ' +
       'Independent, Licensed Practitioners. PepNationRX Acts Solely As The ' +
       'Designated Billing Agent.</p>'
@@ -103,6 +134,13 @@ export class PnrxPatientDashboard extends PnrxComponent {
   }
 
   renderSummary(summary) {
+    // SVG icons for each stat card — clinical line art, no emojis
+    const STAT_ICONS = [
+      '<svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M8 2v4M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/></svg>',
+      '<svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg>',
+      '<svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>',
+      '<svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>',
+    ];
     const cards = [
       { label: 'Active Subscriptions', value: summary.activeSubscriptionCount || 0 },
       { label: 'Prescriptions', value: summary.prescriptionCount || 0 },
@@ -110,9 +148,10 @@ export class PnrxPatientDashboard extends PnrxComponent {
       { label: 'Lifetime Spend', value: money(summary.lifetimeSpendCents || 0) },
     ];
     const items = cards
-      .map(function (card) {
+      .map(function (card, i) {
         return (
           '<div class="pnrx-dash__stat">' +
+          '<span class="pnrx-dash__stat-icon">' + STAT_ICONS[i] + '</span>' +
           '<span class="pnrx-dash__stat-value">' +
           escapeHtml(String(card.value)) +
           '</span>' +
@@ -123,7 +162,17 @@ export class PnrxPatientDashboard extends PnrxComponent {
         );
       })
       .join('');
-    return '<div class="pnrx-dash__stats">' + items + '</div>';
+    // Quick-action bar below stats
+    const actions =
+      '<div class="pnrx-dash__actions">' +
+      '<a href="#/intake" class="pnrx-dash__action">' +
+      '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>' +
+      'Start New Intake</a>' +
+      '<a href="#/catalog" class="pnrx-dash__action">' +
+      '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>' +
+      'Browse Treatments</a>' +
+      '</div>';
+    return '<div class="pnrx-dash__stats">' + items + '</div>' + actions;
   }
 
   // Generic section wrapper: a titled card holding either rows or an empty
@@ -245,6 +294,35 @@ export class PnrxPatientDashboard extends PnrxComponent {
     return this.section('Recent Billing', rows, 'No Charges Have Been Made Yet.');
   }
 
+  // The notification-preferences panel: a per-channel opt-in the patient can
+  // change. Email is on by default; SMS is off until that channel ships.
+  renderNotificationPrefs() {
+    const prefs = this.state.prefs || { emailEnabled: true, smsEnabled: false };
+    const emailChecked = prefs.emailEnabled !== false ? ' checked' : '';
+    const smsChecked = prefs.smsEnabled === true ? ' checked' : '';
+    const savedNote = this.state.prefsSaved
+      ? '<p class="pnrx-dash__empty">Your Preferences Have Been Saved.</p>'
+      : '';
+    return (
+      '<section class="pnrx-dash__card">' +
+      '<h3 class="pnrx-dash__card-title">Notification Preferences</h3>' +
+      '<div class="pnrx-dash__list">' +
+      '<label class="pnrx-dash__row">' +
+      '<input type="checkbox" data-pref="email"' + emailChecked + ' />' +
+      '<span class="pnrx-dash__row-primary">Email Notifications</span>' +
+      '</label>' +
+      '<label class="pnrx-dash__row">' +
+      '<input type="checkbox" data-pref="sms"' + smsChecked + ' />' +
+      '<span class="pnrx-dash__row-primary">Text Message Notifications</span>' +
+      '</label>' +
+      '</div>' +
+      savedNote +
+      '<button type="button" class="pnrx-dash__btn" data-action="save-prefs">' +
+      'Save Preferences</button>' +
+      '</section>'
+    );
+  }
+
   // -- Event binding ---------------------------------------------------------
 
   afterRender() {
@@ -253,6 +331,32 @@ export class PnrxPatientDashboard extends PnrxComponent {
     if (retry) {
       retry.addEventListener('click', function () {
         self.load();
+      });
+    }
+
+    // Save the notification preferences. Skipped in demo mode, which has no
+    // authenticated API session.
+    const savePrefs = this.$('[data-action="save-prefs"]');
+    if (savePrefs && this.getAttribute('mode') !== 'demo') {
+      savePrefs.addEventListener('click', async function () {
+        const emailEl = self.$('[data-pref="email"]');
+        const smsEl = self.$('[data-pref="sms"]');
+        const body = {
+          emailEnabled: emailEl ? emailEl.checked : true,
+          smsEnabled: smsEl ? smsEl.checked : false,
+        };
+        try {
+          const res = await api.put(
+            '/api/patient/notification-preferences',
+            body
+          );
+          self.setState({
+            prefs: (res && res.preferences) || body,
+            prefsSaved: true,
+          });
+        } catch (e) {
+          self.setState({ prefsSaved: false });
+        }
       });
     }
   }

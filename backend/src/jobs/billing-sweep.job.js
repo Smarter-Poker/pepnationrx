@@ -17,6 +17,7 @@
 
 const logger = require('../utils/logger');
 const audit = require('../services/audit.service');
+const notificationService = require('../services/notification');
 const subscriptionModel = require('../models/subscription.model');
 
 // Days a renewal may sit unconfirmed before the subscription is marked
@@ -46,7 +47,7 @@ function daysBetween(fromIso, toIso) {
 // Run the job. Returns a summary suitable for logging and auditing.
 async function run() {
   const todayIso = dateOnlyIso(new Date());
-  const summary = { renewalsDue: 0, markedPastDue: 0 };
+  const summary = { renewalsDue: 0, markedPastDue: 0, notified: 0 };
 
   const due = await subscriptionModel.findDueForBilling(todayIso);
   for (let i = 0; i < due.length; i += 1) {
@@ -60,6 +61,19 @@ async function run() {
     } else {
       // Within grace: a renewal the billing system should be processing.
       summary.renewalsDue += 1;
+      // Tell the patient their plan renews soon. The dedupe key includes the
+      // billing date, so a re-run within the same cycle never emails twice,
+      // and the next cycle (a new date) sends a fresh reminder.
+      const renewalIso = dateOnlyIso(new Date(sub.next_billing_date));
+      const sent = await notificationService.send({
+        userId: sub.user_id,
+        template: 'billing_renewal',
+        payload: { planName: sub.plan_name, renewalDate: renewalIso },
+        dedupeKey: 'billing-renewal:' + sub.id + ':' + renewalIso,
+      });
+      if (sent && sent.ok && !sent.duplicate && !sent.skipped) {
+        summary.notified += 1;
+      }
     }
   }
 

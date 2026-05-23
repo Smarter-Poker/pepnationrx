@@ -459,6 +459,81 @@ pnrx-triage-form {
   line-height: var(--leading-base);
 }
 
+/* ── End-screen shared ────────────────────────────────────────────────────── */
+.pnrx-triage__end {
+  text-align: center;
+  padding: var(--space-6) 0 var(--space-3);
+}
+
+.pnrx-triage__end .pnrx-triage__title {
+  margin-top: var(--space-3);
+}
+
+/* Icon bubble on end screens */
+.pnrx-triage__end-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-pill);
+  margin-bottom: var(--space-2);
+}
+
+.pnrx-triage__end-icon--done {
+  background: var(--teal-50);
+  color: var(--teal-500);
+  border: 1.5px solid var(--teal-100);
+}
+
+.pnrx-triage__end-icon--stop {
+  background: var(--red-100);
+  color: var(--red-600);
+  border: 1.5px solid hsl(0, 50%, 85%);
+}
+
+/* Action buttons row on end screens */
+.pnrx-triage__end-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+  flex-wrap: wrap;
+}
+
+.pnrx-triage__end-actions .pnrx-triage__btn--primary {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ── Step transition animation ────────────────────────────────────────────── */
+@keyframes triage-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.pnrx-triage__question,
+.pnrx-triage__grid,
+.pnrx-triage__end {
+  animation: triage-slide-in var(--duration-base) var(--ease-out) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pnrx-triage__question,
+  .pnrx-triage__grid,
+  .pnrx-triage__end {
+    animation: none;
+  }
+}
+
 /* ── Responsive ──────────────────────────────────────────────────────────── */
 @media (max-width: 600px) {
   .pnrx-triage {

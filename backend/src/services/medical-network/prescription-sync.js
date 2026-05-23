@@ -17,6 +17,7 @@ const prescriptionModel = require('../../models/prescription.model');
 const pharmacyModel = require('../../models/pharmacy.model');
 const addressModel = require('../../models/address.model');
 const audit = require('../audit.service');
+const notificationService = require('../notification');
 const orderRouter = require('../pharmacy/order-router');
 const { mapNetworkStatusToIntakeStatus } = require('./intake-mapper');
 
@@ -166,6 +167,15 @@ async function applySignedPrescription(payload) {
   // it never fails the webhook, and it is idempotent on replay.
   await routeToPharmacy(prescription);
 
+  // Tell the patient their intake has been reviewed. The dedupe key ties the
+  // email to this prescription, so a webhook replay never sends it twice.
+  await notificationService.send({
+    userId: submission.user_id,
+    template: 'prescription_signed',
+    payload: { treatmentName: rx.drugCompound || 'your treatment' },
+    dedupeKey: 'rx-reviewed:' + prescription.id,
+  });
+
   return prescription;
 }
 
@@ -208,6 +218,15 @@ async function applyReviewDecision(payload) {
       phiAccessed: true,
       metadata: { decision: status },
     });
+  });
+
+  // Tell the patient a decision has been reached on their intake. The dedupe
+  // key ties the email to this submission, so a webhook replay is a no-op.
+  await notificationService.send({
+    userId: submission.user_id,
+    template: 'prescription_signed',
+    payload: {},
+    dedupeKey: 'intake-reviewed:' + submission.id,
   });
 
   return intakeModel.findById(submission.id);

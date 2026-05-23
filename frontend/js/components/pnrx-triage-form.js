@@ -583,18 +583,29 @@ export class PnrxTriageForm extends PnrxComponent {
   renderDisqualifiedScreen() {
     const reason =
       this.state.disqualifyReason ||
-      'Based On Your Answers, This Platform Is Not The Right Fit For Care At ' +
+      'Based On Your Answers, This Treatment May Not Be The Right Fit At ' +
       'This Time.';
     return (
       '<div class="pnrx-triage__end pnrx-triage__end--stop">' +
+      '<div class="pnrx-triage__end-icon pnrx-triage__end-icon--stop">' +
+      '<svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" viewBox="0 0 24 24">' +
+      '<circle cx="12" cy="12" r="10"/>' +
+      '<path d="M12 8v4M12 16h.01"/>' +
+      '</svg>' +
+      '</div>' +
       '<h2 class="pnrx-triage__title">We Cannot Continue This Intake</h2>' +
       '<p class="pnrx-triage__sub">' +
       escapeHtml(reason) +
       '</p>' +
-      '<p class="pnrx-triage__sub">Your Safety Comes First. Please Speak With ' +
-      'Your Own Physician About The Care That Is Right For You.</p>' +
+      '<p class="pnrx-triage__sub">Your Safety Is Our Top Priority. ' +
+      'We Recommend Consulting With Your Primary Care Physician For ' +
+      'Personalized Guidance.</p>' +
+      '<div class="pnrx-triage__end-actions">' +
+      '<a href="#/catalog" class="pnrx-triage__btn pnrx-triage__btn--primary">' +
+      'Browse Other Treatments</a>' +
       '<button type="button" class="pnrx-triage__btn pnrx-triage__btn--ghost" ' +
       'data-action="reset">Start Over</button>' +
+      '</div>' +
       '</div>'
     );
   }
@@ -602,12 +613,22 @@ export class PnrxTriageForm extends PnrxComponent {
   renderSubmittedScreen() {
     return (
       '<div class="pnrx-triage__end pnrx-triage__end--done">' +
+      '<div class="pnrx-triage__end-icon pnrx-triage__end-icon--done">' +
+      '<svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">' +
+      '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>' +
+      '<path d="M22 4 12 14.01l-3-3"/>' +
+      '</svg>' +
+      '</div>' +
       '<h2 class="pnrx-triage__title">Your Intake Has Been Submitted</h2>' +
       '<p class="pnrx-triage__sub">An Independent, Licensed Clinician Will ' +
       'Review Your Responses. You Will Be Notified Once The Review Is ' +
       'Complete.</p>' +
+      '<div class="pnrx-triage__end-actions">' +
+      '<a href="#/dashboard" class="pnrx-triage__btn pnrx-triage__btn--primary">' +
+      'Go To Your Dashboard</a>' +
       '<button type="button" class="pnrx-triage__btn pnrx-triage__btn--ghost" ' +
       'data-action="reset">Start A New Intake</button>' +
+      '</div>' +
       '</div>'
     );
   }

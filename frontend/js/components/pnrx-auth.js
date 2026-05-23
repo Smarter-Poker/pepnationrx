@@ -25,6 +25,61 @@ const REGISTRATION_ACKS = [
     'Receive Care Through Telehealth.',
 ];
 
+// All 50 US states plus DC for the state-of-residence dropdown.
+const US_STATES = [
+  { value: 'AL', label: 'Alabama' },
+  { value: 'AK', label: 'Alaska' },
+  { value: 'AZ', label: 'Arizona' },
+  { value: 'AR', label: 'Arkansas' },
+  { value: 'CA', label: 'California' },
+  { value: 'CO', label: 'Colorado' },
+  { value: 'CT', label: 'Connecticut' },
+  { value: 'DE', label: 'Delaware' },
+  { value: 'DC', label: 'District Of Columbia' },
+  { value: 'FL', label: 'Florida' },
+  { value: 'GA', label: 'Georgia' },
+  { value: 'HI', label: 'Hawaii' },
+  { value: 'ID', label: 'Idaho' },
+  { value: 'IL', label: 'Illinois' },
+  { value: 'IN', label: 'Indiana' },
+  { value: 'IA', label: 'Iowa' },
+  { value: 'KS', label: 'Kansas' },
+  { value: 'KY', label: 'Kentucky' },
+  { value: 'LA', label: 'Louisiana' },
+  { value: 'ME', label: 'Maine' },
+  { value: 'MD', label: 'Maryland' },
+  { value: 'MA', label: 'Massachusetts' },
+  { value: 'MI', label: 'Michigan' },
+  { value: 'MN', label: 'Minnesota' },
+  { value: 'MS', label: 'Mississippi' },
+  { value: 'MO', label: 'Missouri' },
+  { value: 'MT', label: 'Montana' },
+  { value: 'NE', label: 'Nebraska' },
+  { value: 'NV', label: 'Nevada' },
+  { value: 'NH', label: 'New Hampshire' },
+  { value: 'NJ', label: 'New Jersey' },
+  { value: 'NM', label: 'New Mexico' },
+  { value: 'NY', label: 'New York' },
+  { value: 'NC', label: 'North Carolina' },
+  { value: 'ND', label: 'North Dakota' },
+  { value: 'OH', label: 'Ohio' },
+  { value: 'OK', label: 'Oklahoma' },
+  { value: 'OR', label: 'Oregon' },
+  { value: 'PA', label: 'Pennsylvania' },
+  { value: 'RI', label: 'Rhode Island' },
+  { value: 'SC', label: 'South Carolina' },
+  { value: 'SD', label: 'South Dakota' },
+  { value: 'TN', label: 'Tennessee' },
+  { value: 'TX', label: 'Texas' },
+  { value: 'UT', label: 'Utah' },
+  { value: 'VT', label: 'Vermont' },
+  { value: 'VA', label: 'Virginia' },
+  { value: 'WA', label: 'Washington' },
+  { value: 'WV', label: 'West Virginia' },
+  { value: 'WI', label: 'Wisconsin' },
+  { value: 'WY', label: 'Wyoming' },
+];
+
 export class PnrxAuth extends PnrxComponent {
   constructor() {
     super();
@@ -123,6 +178,20 @@ export class PnrxAuth extends PnrxComponent {
         ? this.renderRegister()
         : this.renderLogin()) +
       '</div>' +
+      '<div class="pnrx-auth__trust">' +
+      '<div class="pnrx-auth__trust-item">' +
+      '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>' +
+      '<span>HIPAA Compliant</span>' +
+      '</div>' +
+      '<div class="pnrx-auth__trust-item">' +
+      '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' +
+      '<span>256-Bit Encrypted</span>' +
+      '</div>' +
+      '<div class="pnrx-auth__trust-item">' +
+      '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>' +
+      '<span>Board-Certified Providers</span>' +
+      '</div>' +
+      '</div>' +
       '</div>'
     );
   }
@@ -157,7 +226,9 @@ export class PnrxAuth extends PnrxComponent {
       this.renderField('pnrx-password', 'Password', 'password', 'password', s.password) +
       '<button type="button" class="pnrx-auth__cta" data-action="submit"' +
       (this.canSubmit() ? '' : ' disabled') + '>' +
-      (s.submitting ? 'Signing In' : 'Sign In') +
+      (s.submitting
+        ? '<span class="pnrx-spinner pnrx-spinner--sm"></span> Signing In...'
+        : 'Sign In') +
       '</button>' +
       '<p class="pnrx-auth__switch">New To PepNationRX? ' +
       '<button type="button" class="pnrx-auth__link" data-mode="register">' +
@@ -189,16 +260,26 @@ export class PnrxAuth extends PnrxComponent {
       this.renderField('pnrx-email', 'Email Address', 'email', 'email', s.email) +
       this.renderField('pnrx-password', 'Password', 'password', 'password', s.password) +
       '<p class="pnrx-auth__hint">Use At Least 10 Characters.</p>' +
-      this.renderField('pnrx-state', 'State Of Residence', 'text', 'usState', s.usState) +
-      '<p class="pnrx-auth__hint">Enter Your Two-Letter State Code, For ' +
-      'Example TX.</p>' +
+      '<div class="pnrx-auth__field">' +
+      '<label for="pnrx-state">State Of Residence</label>' +
+      '<select id="pnrx-state" class="pnrx-auth__select">' +
+      '<option value=""' + (s.usState === '' ? ' selected' : '') + ' disabled>Select Your State</option>' +
+      US_STATES.map(function (st) {
+        return '<option value="' + st.value + '"' +
+          (s.usState === st.value ? ' selected' : '') + '>' +
+          escapeHtml(st.label) + '</option>';
+      }).join('') +
+      '</select>' +
+      '</div>' +
       '<div class="pnrx-auth__acks">' +
       '<h3 class="pnrx-auth__acks-title">Required Acknowledgements</h3>' +
       acks +
       '</div>' +
       '<button type="button" class="pnrx-auth__cta" data-action="submit"' +
       (this.canSubmit() ? '' : ' disabled') + '>' +
-      (s.submitting ? 'Creating Account' : 'Create Account') +
+      (s.submitting
+        ? '<span class="pnrx-spinner pnrx-spinner--sm"></span> Creating Account...'
+        : 'Create Account') +
       '</button>' +
       '<p class="pnrx-auth__switch">Already Have An Account? ' +
       '<button type="button" class="pnrx-auth__link" data-mode="login">' +
@@ -233,6 +314,14 @@ export class PnrxAuth extends PnrxComponent {
         self.setMode(button.getAttribute('data-mode'));
       });
     });
+
+    // State dropdown change handler
+    var stateSelect = this.$('#pnrx-state');
+    if (stateSelect && stateSelect.tagName === 'SELECT') {
+      stateSelect.addEventListener('change', function () {
+        self.setState({ usState: stateSelect.value });
+      });
+    }
 
     const submit = this.$('[data-action="submit"]');
     if (submit) {
