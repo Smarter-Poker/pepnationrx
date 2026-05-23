@@ -160,16 +160,16 @@ export const TREATMENTS = [
   // -- Weight Management ------------------------------------------------------
   t('semaglutide', 'weight-management', 'Semaglutide',
     'A Weekly GLP-1 Injection That Reduces Appetite And Supports Steady Weight Loss.',
-    'injection', 'compounded', 'available', 'weight_management', 24900, [1, 3, 6]),
+    'injection', 'compounded', 'available', 'weight_management', 29900, [1, 3, 6]),
   t('tirzepatide', 'weight-management', 'Tirzepatide',
     'A Dual GLP-1 And GIP Injection For Patients Seeking Greater Weight Loss.',
-    'injection', 'compounded', 'available', 'weight_management', 32900, [1, 3, 6]),
-  t('retatrutide', 'weight-management', 'Retatrutide',
-    'A Next-Generation Triple-Agonist Weight Loss Injection. Coming Soon.',
-    'injection', 'compounded', 'coming_soon', 'weight_management', 39900, [1, 3]),
-  t('cagrilintide', 'weight-management', 'Cagrilintide',
-    'An Amylin Analog Used Alone Or Blended With A GLP-1 For Appetite Control.',
-    'injection', 'compounded', 'available', 'weight_management', 29900, [1, 3]),
+    'injection', 'compounded', 'available', 'weight_management', 39900, [1, 3, 6]),
+  t('liraglutide', 'weight-management', 'Liraglutide',
+    'A Daily GLP-1 Injection Studied For Appetite Regulation And Weight Management.',
+    'injection', 'compounded', 'available', 'weight_management', 24900, [1, 3]),
+  t('exenatide', 'weight-management', 'Exenatide',
+    'A GLP-1 Receptor Agonist Injection Studied For Glycemic And Metabolic Support.',
+    'injection', 'compounded', 'available', 'weight_management', 24900, [1, 3]),
   t('aod-9604', 'weight-management', 'AOD9604',
     'A Peptide Fragment Studied For Fat Metabolism Without Affecting Blood Sugar.',
     'injection', 'compounded', 'available', 'weight_management', 17900, [1, 3]),
@@ -189,10 +189,13 @@ export const TREATMENTS = [
     'troche', 'compounded', 'available', 'sexual_health', 11900, [1, 3]),
   t('pt-141', 'sexual-health', 'PT-141',
     'A Melanocortin Peptide That Supports Libido And Arousal In Men And Women.',
-    'injection', 'compounded', 'available', 'sexual_health', 14900, [1, 3]),
+    'injection', 'compounded', 'available', 'sexual_health', 19900, [1, 3]),
   t('premature-ejaculation', 'sexual-health', 'Premature Ejaculation Treatment',
     'An Off-Label Oral Treatment To Improve Control And Confidence.',
     'oral', 'branded', 'available', 'sexual_health', 6900, [1, 3]),
+  t('oxytocin', 'sexual-health', 'Oxytocin',
+    'A Compounded Troche Or Nasal Spray Studied For Mood, Bonding, And Intimacy.',
+    'troche', 'compounded', 'available', 'sexual_health', 12900, [1, 3]),
 
   // -- Testosterone And Hormones ---------------------------------------------
   t('enclomiphene', 'testosterone', 'Enclomiphene',
@@ -210,6 +213,9 @@ export const TREATMENTS = [
   t('hcg', 'testosterone', 'HCG',
     'Often Paired With Testosterone Therapy To Help Maintain Fertility.',
     'injection', 'compounded', 'available', 'trt', 13900, [1, 3]),
+  t('gonadorelin', 'testosterone', 'Gonadorelin',
+    'A GnRH Peptide Often Paired With Hormone Therapy To Support Natural Production.',
+    'injection', 'compounded', 'available', 'trt', 14900, [1, 3]),
 
   // -- Womens Hormone Health -------------------------------------------------
   t('estradiol-therapy', 'womens-hormone', 'Estradiol Therapy',
@@ -266,15 +272,6 @@ export const TREATMENTS = [
   t('acne-treatment', 'skin', 'Acne Treatment',
     'A Provider-Directed Regimen For Persistent And Hormonal Acne.',
     'topical', 'branded', 'available', null, 3000, [1, 3]),
-  t('ghk-cu', 'skin', 'GHK-Cu',
-    'A Copper Peptide Studied For Skin Firmness, Repair, And Collagen Support.',
-    'topical', 'compounded', 'available', null, 8900, [1, 3]),
-  t('glow-blend', 'skin', 'GLOW Blend',
-    'A Cosmetic Peptide Blend Of TB-500, BPC-157, And GHK For Skin And Recovery.',
-    'injection', 'compounded', 'available', null, 16900, [1, 3]),
-  t('klow-blend', 'skin', 'KLOW Blend',
-    'The GLOW Blend Plus KPV, Adding Anti-Inflammatory Support For Skin Health.',
-    'injection', 'compounded', 'available', null, 18900, [1, 3]),
   t('snap-8', 'skin', 'SNAP-8',
     'A Topical Peptide Studied For The Appearance Of Expression Lines.',
     'topical', 'compounded', 'available', null, 7900, [1, 3]),
@@ -292,12 +289,6 @@ export const TREATMENTS = [
   t('anxiety-depression', 'mental-health', 'Anxiety And Depression Treatment',
     'Provider-Managed Medication For Anxiety And Depression, Adjusted Over Time.',
     'oral', 'branded', 'available', null, 4900, [1, 3]),
-  t('selank', 'mental-health', 'Selank',
-    'A Peptide Studied For Calm Focus And A Balanced Stress Response.',
-    'nasal_spray', 'compounded', 'available', null, 9900, [1, 3]),
-  t('semax', 'mental-health', 'Semax',
-    'A Peptide Studied For Cognitive Clarity And Mental Stamina.',
-    'nasal_spray', 'compounded', 'available', null, 9900, [1, 3]),
 
   // -- Sleep -----------------------------------------------------------------
   t('sleep-support', 'sleep', 'Prescription Sleep Support',
@@ -308,15 +299,6 @@ export const TREATMENTS = [
     'oral', 'otc', 'available', null, 1400, [1, 3], false),
 
   // -- Peptide Therapy -------------------------------------------------------
-  t('bpc-157', 'peptide-therapy', 'BPC-157',
-    'A Peptide Widely Studied For Tissue Repair And Recovery Support.',
-    'injection', 'compounded', 'available', 'peptide_therapy', 13900, [1, 3]),
-  t('tb-500', 'peptide-therapy', 'TB-500 Thymosin Beta-4',
-    'A Peptide Studied For Flexibility, Recovery, And Tissue Repair.',
-    'injection', 'compounded', 'available', 'peptide_therapy', 14900, [1, 3]),
-  t('bpc-tb-blend', 'peptide-therapy', 'BPC-157 And TB-500 Blend',
-    'A Combined 10mg And 10mg Recovery Blend In A Single Protocol.',
-    'injection', 'compounded', 'available', 'peptide_therapy', 19900, [1, 3]),
   t('cjc-ipamorelin', 'peptide-therapy', 'CJC-1295 And Ipamorelin',
     'A Growth-Hormone Secretagogue Pairing Studied For Recovery And Body Composition.',
     'injection', 'compounded', 'available', 'peptide_therapy', 17900, [1, 3]),
@@ -325,25 +307,16 @@ export const TREATMENTS = [
     'injection', 'compounded', 'available', 'peptide_therapy', 13900, [1, 3]),
   t('sermorelin', 'peptide-therapy', 'Sermorelin',
     'A Growth-Hormone-Releasing Peptide Studied For Recovery And Sleep Quality.',
-    'injection', 'compounded', 'available', 'peptide_therapy', 13900, [1, 3]),
-  t('tesamorelin', 'peptide-therapy', 'Tesamorelin',
-    'A Growth-Hormone-Releasing Peptide Studied For Visceral Fat Reduction.',
-    'injection', 'compounded', 'available', 'peptide_therapy', 21900, [1, 3]),
+    'injection', 'compounded', 'available', 'peptide_therapy', 29900, [1, 3]),
   t('hgh-fragment-176-191', 'peptide-therapy', 'HGH Fragment 176-191',
     'A Growth-Hormone Fragment Studied For Fat Metabolism.',
     'injection', 'compounded', 'available', 'peptide_therapy', 15900, [1, 3]),
   t('peg-mgf', 'peptide-therapy', 'PEG-MGF',
     'A Mechano Growth Factor Variant Studied For Muscle Recovery.',
     'injection', 'compounded', 'available', 'peptide_therapy', 16900, [1, 3]),
-  t('mots-c', 'peptide-therapy', 'MOTS-c',
-    'A Mitochondrial-Derived Peptide Studied For Metabolism And Endurance.',
-    'injection', 'compounded', 'available', 'peptide_therapy', 16900, [1, 3]),
   t('thymosin-alpha-1', 'peptide-therapy', 'Thymosin Alpha-1',
     'A Peptide Studied For Immune Regulation And Resilience.',
     'injection', 'compounded', 'available', 'peptide_therapy', 17900, [1, 3]),
-  t('kpv', 'peptide-therapy', 'KPV',
-    'A Short Peptide Studied For Anti-Inflammatory And Gut Health Support.',
-    'injection', 'compounded', 'available', 'peptide_therapy', 12900, [1, 3]),
   t('five-amino-1mq', 'peptide-therapy', '5-Amino-1MQ',
     'An Oral Compound Studied For Metabolic Activity And Body Composition.',
     'oral', 'compounded', 'available', 'peptide_therapy', 13900, [1, 3]),
@@ -357,13 +330,16 @@ export const TREATMENTS = [
   // -- Longevity And Wellness ------------------------------------------------
   t('nad-plus', 'longevity', 'NAD+',
     'A Coenzyme Therapy Studied For Cellular Energy And Healthy Aging.',
-    'injection', 'compounded', 'available', 'longevity', 19900, [1, 3]),
+    'injection', 'compounded', 'available', 'longevity', 34900, [1, 3]),
   t('glutathione', 'longevity', 'Glutathione',
     'A Master Antioxidant Therapy Studied For Detoxification And Skin Clarity.',
-    'injection', 'compounded', 'available', 'longevity', 9900, [1, 3]),
+    'injection', 'compounded', 'available', 'longevity', 17900, [1, 3]),
   t('vitamin-b12', 'longevity', 'Vitamin B12',
     'A B12 Injection To Support Energy And Healthy Metabolism.',
     'injection', 'compounded', 'available', 'longevity', 4900, [1, 3]),
+  t('l-carnitine', 'longevity', 'L-Carnitine',
+    'An Injectable Amino Acid Studied For Fat Metabolism And Cellular Energy.',
+    'injection', 'compounded', 'available', 'longevity', 14900, [1, 3]),
 
   // -- Primary Care And Labs -------------------------------------------------
   t('comprehensive-lab-panel', 'primary-care', 'Comprehensive Lab Panel',
@@ -437,6 +413,75 @@ export const PHASE_2_PROTOCOLS = [
   t('myo-preserve-protocol', 'signature-protocols', 'The Myo-Preserve Protocol',
     'An Activin Receptor Modulator Studied For Lean-Mass Preservation During Weight Loss.',
     'injection', 'compounded', 'coming_soon', 'weight_management', 59900, [1, 3]),
+];
+
+// ----------------------------------------------------------------------------
+// HIDDEN TREATMENTS - UI-dormant standalone compounds.
+// ----------------------------------------------------------------------------
+// These compounds exist in the database (migration 0009) with is_active = FALSE
+// because they are not currently lawful to ship direct-to-consumer:
+//   - Peptides pending the FDA PCAC review of July 23-24, 2026 (BPC-157,
+//     TB-500, KPV, MOTS-c, Semax, Selank, GHK-Cu, Kisspeptin-10, and the
+//     BPC/GLOW/KLOW blends). Removal from Category 2 in April 2026 is not
+//     compounding approval.
+//   - Investigational metabolic agents not yet FDA-approved (Retatrutide,
+//     Cagrilintide).
+//   - Tesamorelin (FDA-approved as Egrifta; 503A copy-rule restricted).
+//   - Leuprolide and Goserelin (FDA-approved hormone-suppression drugs;
+//     copy-rule restricted and outside this catalog's clinical scope).
+// They are kept OUT of the TREATMENTS array so the catalog component never
+// renders them. To launch one: confirm its regulatory status, flip
+// treatments.is_active to TRUE in the database, and move its entry into
+// TREATMENTS above.
+export const HIDDEN_TREATMENTS = [
+  t('bpc-157', 'peptide-therapy', 'BPC-157',
+    'A Peptide Widely Studied For Tissue Repair And Recovery Support.',
+    'injection', 'compounded', 'coming_soon', 'peptide_therapy', 13900, [1, 3]),
+  t('tb-500', 'peptide-therapy', 'TB-500 Thymosin Beta-4',
+    'A Peptide Studied For Flexibility, Recovery, And Tissue Repair.',
+    'injection', 'compounded', 'coming_soon', 'peptide_therapy', 14900, [1, 3]),
+  t('bpc-tb-blend', 'peptide-therapy', 'BPC-157 And TB-500 Blend',
+    'A Combined 10mg And 10mg Recovery Blend In A Single Protocol.',
+    'injection', 'compounded', 'coming_soon', 'peptide_therapy', 19900, [1, 3]),
+  t('kpv', 'peptide-therapy', 'KPV',
+    'A Short Peptide Studied For Anti-Inflammatory And Gut Health Support.',
+    'injection', 'compounded', 'coming_soon', 'peptide_therapy', 12900, [1, 3]),
+  t('mots-c', 'peptide-therapy', 'MOTS-c',
+    'A Mitochondrial-Derived Peptide Studied For Metabolism And Endurance.',
+    'injection', 'compounded', 'coming_soon', 'peptide_therapy', 16900, [1, 3]),
+  t('kisspeptin-10', 'peptide-therapy', 'Kisspeptin-10',
+    'A Peptide Studied For Endocrine Signaling. Pending The July 2026 FDA PCAC Review.',
+    'injection', 'compounded', 'coming_soon', 'peptide_therapy', 19900, [1, 3]),
+  t('tesamorelin', 'peptide-therapy', 'Tesamorelin',
+    'A Growth-Hormone-Releasing Peptide. Retired: FDA-Approved As Egrifta.',
+    'injection', 'compounded', 'retired', 'peptide_therapy', 21900, [1, 3]),
+  t('semax', 'mental-health', 'Semax',
+    'A Peptide Studied For Cognitive Clarity And Mental Stamina.',
+    'nasal_spray', 'compounded', 'coming_soon', null, 9900, [1, 3]),
+  t('selank', 'mental-health', 'Selank',
+    'A Peptide Studied For Calm Focus And A Balanced Stress Response.',
+    'nasal_spray', 'compounded', 'coming_soon', null, 9900, [1, 3]),
+  t('ghk-cu', 'skin', 'GHK-Cu',
+    'A Copper Peptide Studied For Skin Firmness, Repair, And Collagen Support.',
+    'topical', 'compounded', 'coming_soon', null, 8900, [1, 3]),
+  t('glow-blend', 'skin', 'GLOW Blend',
+    'A Cosmetic Peptide Blend Of TB-500, BPC-157, And GHK For Skin And Recovery.',
+    'injection', 'compounded', 'coming_soon', null, 16900, [1, 3]),
+  t('klow-blend', 'skin', 'KLOW Blend',
+    'The GLOW Blend Plus KPV, Adding Anti-Inflammatory Support For Skin Health.',
+    'injection', 'compounded', 'coming_soon', null, 18900, [1, 3]),
+  t('retatrutide', 'weight-management', 'Retatrutide',
+    'A Next-Generation Triple-Agonist Weight Loss Injection. Investigational.',
+    'injection', 'compounded', 'coming_soon', 'weight_management', 39900, [1, 3]),
+  t('cagrilintide', 'weight-management', 'Cagrilintide',
+    'An Amylin Analog Used Alone Or Blended With A GLP-1. Investigational.',
+    'injection', 'compounded', 'coming_soon', 'weight_management', 29900, [1, 3]),
+  t('leuprolide', 'testosterone', 'Leuprolide',
+    'A GnRH Agonist. Reserved Pending Clinical-Scope And Compounding Review.',
+    'injection', 'compounded', 'coming_soon', 'trt', 29900, [1, 3]),
+  t('goserelin', 'testosterone', 'Goserelin',
+    'A GnRH Agonist. Reserved Pending Clinical-Scope And Compounding Review.',
+    'injection', 'compounded', 'coming_soon', 'trt', 29900, [1, 3]),
 ];
 
 // ----------------------------------------------------------------------------
