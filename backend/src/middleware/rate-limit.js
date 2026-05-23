@@ -18,6 +18,13 @@ function limitHandler(req, res, next) {
   next(new AppError(429, 'too_many_requests', 'Too many requests. Please slow down.'));
 }
 
+// Liveness and readiness probes must never be throttled. A monitor or load
+// balancer polling them from a single IP could otherwise exhaust the per-IP
+// budget and start receiving 429s, which an orchestrator misreads as the
+// service being down - pulling a healthy instance out of rotation. These
+// paths are exempted from the general limiter via `skip`.
+const HEALTH_PATHS = ['/api/health', '/api/health/ready'];
+
 // General API limiter.
 const generalLimiter = rateLimit({
   windowMs: config.rateLimit.windowMs,
@@ -25,6 +32,7 @@ const generalLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   handler: limitHandler,
+  skip: (req) => HEALTH_PATHS.includes(req.path),
 });
 
 // Strict limiter for the credential endpoints (register, login): the prime

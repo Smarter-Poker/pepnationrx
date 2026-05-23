@@ -128,12 +128,34 @@ export class PnrxTriageForm extends PnrxComponent {
       return Array.isArray(value) && value.length > 0;
     }
     if (question.type === 'number') {
-      return typeof value === 'number' && !Number.isNaN(value);
+      if (typeof value !== 'number' || Number.isNaN(value)) return false;
+      // Enforce the schema's declared bounds: a value outside [min, max] is
+      // not an acceptable answer, so it must not advance the flow.
+      if (typeof question.min === 'number' && value < question.min) return false;
+      if (typeof question.max === 'number' && value > question.max) return false;
+      return true;
     }
     if (question.type === 'boolean') {
       return value === true || value === false;
     }
     return value !== undefined && value !== null && value !== '';
+  }
+
+  // Validation message for a number question whose current answer falls
+  // outside its declared [min, max] bounds. Returns '' when the value is
+  // acceptable or not yet entered, so an empty string means "no error".
+  numberRangeError(question) {
+    if (!question || question.type !== 'number') return '';
+    const value = this.state.answers[question.id];
+    if (typeof value !== 'number' || Number.isNaN(value)) return '';
+    const unit = question.unit ? ' ' + question.unit : '';
+    if (typeof question.min === 'number' && value < question.min) {
+      return 'Please Enter A Value Of ' + question.min + unit + ' Or More.';
+    }
+    if (typeof question.max === 'number' && value > question.max) {
+      return 'Please Enter A Value Of ' + question.max + unit + ' Or Less.';
+    }
+    return '';
   }
 
   // Walk every visible answered question and reduce to a triage result.
@@ -265,10 +287,21 @@ export class PnrxTriageForm extends PnrxComponent {
       this.setState({ screen: 'disqualified', disqualifyReason: result.reason });
       return;
     }
+    // Emit only answers for questions still visible under the final
+    // branching. Changing an earlier answer can hide a later question;
+    // without this, that question's now-irrelevant answer would leak into
+    // the intake payload even though evaluateTriage already ignores it.
+    const answers = this.state.answers;
+    const visibleAnswers = {};
+    this.visibleQuestions().forEach(function (question) {
+      if (Object.prototype.hasOwnProperty.call(answers, question.id)) {
+        visibleAnswers[question.id] = answers[question.id];
+      }
+    });
     this.emit('triage:submit', {
       protocolId: protocol.id,
       protocolCategory: protocol.category,
-      answers: Object.assign({}, this.state.answers),
+      answers: visibleAnswers,
       triageFlags: result.flags,
       riskLevel: result.riskLevel,
       status: 'submitted',
@@ -450,7 +483,10 @@ export class PnrxTriageForm extends PnrxComponent {
         (typeof question.max === 'number' ? ' max="' + question.max + '"' : '') +
         ' />' +
         unit +
-        '</div>'
+        '</div>' +
+        '<p class="pnrx-triage__error" data-number-error>' +
+        escapeHtml(this.numberRangeError(question)) +
+        '</p>'
       );
     }
 
@@ -689,11 +725,14 @@ export class PnrxTriageForm extends PnrxComponent {
     if (resetBtn) resetBtn.addEventListener('click', function () { self.reset(); });
   }
 
-  // Toggle the Continue button without a full re-render (keeps input focus).
+  // Toggle the Continue button and refresh the inline number-range error
+  // without a full re-render, so a number or free-text input keeps focus.
   refreshContinueState() {
+    const question = this.currentQuestion();
     const next = this.$('[data-action="next"]');
-    if (!next) return;
-    next.disabled = !this.isAnswered(this.currentQuestion());
+    if (next) next.disabled = !this.isAnswered(question);
+    const errorEl = this.$('[data-number-error]');
+    if (errorEl) errorEl.textContent = this.numberRangeError(question);
   }
 }
 

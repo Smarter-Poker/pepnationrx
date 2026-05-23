@@ -19,6 +19,7 @@ const audit = require('../services/audit.service');
 const consentModel = require('../models/consent.model');
 const addressModel = require('../models/address.model');
 const affiliateModel = require('../models/affiliate.model');
+const referralModel = require('../models/affiliate-referral.model');
 const treatmentModel = require('../models/treatment.model');
 const subscriptionModel = require('../models/subscription.model');
 const transactionModel = require('../models/transaction.model');
@@ -202,6 +203,35 @@ async function place(req, res, next) {
         },
         client
       );
+
+      // When the checkout is attributed to an affiliate, record the referral
+      // conversion on this same transaction so it commits with the
+      // subscription. A referralId from a tracked /?ref= landing marks that
+      // exact referral converted; without one - the patient entered the code
+      // directly - a direct conversion row is recorded instead.
+      if (affiliateId) {
+        if (input.referralId) {
+          await referralModel.markConverted(
+            input.referralId,
+            {
+              referredUserId: req.user.id,
+              subscriptionId: subscription.id,
+              affiliateId: affiliateId,
+            },
+            client
+          );
+        } else {
+          await referralModel.recordDirectConversion(
+            {
+              affiliateId: affiliateId,
+              referredUserId: req.user.id,
+              subscriptionId: subscription.id,
+              referralLinkSlug: input.affiliateCode,
+            },
+            client
+          );
+        }
+      }
 
       return {
         consentRows: consentRows,

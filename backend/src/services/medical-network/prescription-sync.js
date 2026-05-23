@@ -14,8 +14,46 @@ const logger = require('../../utils/logger');
 const intakeModel = require('../../models/intake-submission.model');
 const providerModel = require('../../models/provider.model');
 const prescriptionModel = require('../../models/prescription.model');
+const pharmacyModel = require('../../models/pharmacy.model');
+const addressModel = require('../../models/address.model');
 const audit = require('../audit.service');
+const orderRouter = require('../pharmacy/order-router');
 const { mapNetworkStatusToIntakeStatus } = require('./intake-mapper');
+
+// Route a signed prescription to the default 503A compounding pharmacy for
+// fulfillment. Best-effort: a failure - including no pharmacy contracted yet -
+// is logged and leaves the prescription un-routed rather than failing the
+// webhook. DTC telehealth platforms transmit an approved prescription to their
+// fulfillment pharmacy immediately on signing; the prescription is written
+// only after the patient has subscribed, so a signed prescription already
+// implies a paid patient. Routing is idempotent in the order router, so a
+// webhook replay that re-enters this path returns the existing pharmacy order
+// rather than creating a duplicate.
+async function routeToPharmacy(prescription) {
+  try {
+    const pharmacy = await pharmacyModel.findDefaultActive();
+    if (!pharmacy) {
+      logger.warn('No active pharmacy configured; prescription left un-routed', {
+        prescriptionId: prescription.id,
+      });
+      return;
+    }
+    // addresses are returned default-first, so the first row is the patient's
+    // default shipping address when one has been recorded.
+    const addresses = await addressModel.findByUserId(prescription.user_id);
+    const shippingAddress = addresses[0] || null;
+    await orderRouter.routeApprovedPrescription({
+      prescription: prescription,
+      pharmacyId: pharmacy.id,
+      shippingAddressId: shippingAddress ? shippingAddress.id : null,
+    });
+  } catch (err) {
+    logger.error('Pharmacy routing failed; prescription left un-routed', {
+      prescriptionId: prescription.id,
+      message: err.message,
+    });
+  }
+}
 
 // Apply a signed prescription. `payload` is the verified webhook body:
 //   medicalNetworkSubmissionId  the network's id for the intake
@@ -45,6 +83,10 @@ async function applySignedPrescription(payload) {
     logger.info('Signed prescription already applied; treating webhook as a replay', {
       intakeSubmissionId: submission.id,
     });
+    // A replay still ensures the prescription is routed: if the first
+    // delivery created the prescription but routing was skipped (no pharmacy
+    // contracted at the time), this re-attempts it. Routing is idempotent.
+    await routeToPharmacy(existing);
     return existing;
   }
 
@@ -60,29 +102,50 @@ async function applySignedPrescription(payload) {
   // The prescription insert and the intake-status advance must be atomic, so
   // both run on the transaction's client - a failure after the insert rolls
   // the prescription back rather than orphaning it against a stale intake.
-  const prescription = await withTransaction(async function (client) {
-    const created = await prescriptionModel.create(
-      {
-        userId: submission.user_id,
-        intakeSubmissionId: submission.id,
-        providerId: provider.id,
-        drugCompound: rx.drugCompound,
-        strength: rx.strength,
-        dosageProtocol: rx.dosageProtocol,
-        sigDirections: rx.sigDirections,
-        quantity: rx.quantity,
-        daysSupply: rx.daysSupply,
-        refillsAuthorized: rx.refillsAuthorized || 0,
-        status: 'approved',
-        writtenDate: rx.writtenDate,
-        expirationDate: rx.expirationDate,
-        signedPayloadRef: rx.signedPayloadRef,
-      },
-      client
-    );
-    await intakeModel.updateStatus(submission.id, 'approved', client);
-    return created;
-  });
+  let prescription;
+  try {
+    prescription = await withTransaction(async function (client) {
+      const created = await prescriptionModel.create(
+        {
+          userId: submission.user_id,
+          intakeSubmissionId: submission.id,
+          providerId: provider.id,
+          drugCompound: rx.drugCompound,
+          strength: rx.strength,
+          dosageProtocol: rx.dosageProtocol,
+          sigDirections: rx.sigDirections,
+          quantity: rx.quantity,
+          daysSupply: rx.daysSupply,
+          refillsAuthorized: rx.refillsAuthorized || 0,
+          status: 'approved',
+          writtenDate: rx.writtenDate,
+          expirationDate: rx.expirationDate,
+          signedPayloadRef: rx.signedPayloadRef,
+        },
+        client
+      );
+      await intakeModel.updateStatus(submission.id, 'approved', client);
+      return created;
+    });
+  } catch (err) {
+    // A second signed-prescription event for this submission, processed
+    // concurrently, can slip past the findByIntakeSubmissionId check above and
+    // trip the prescriptions_one_per_intake unique index (SQLSTATE 23505).
+    // Resolve to the prescription the winning event created rather than
+    // failing: the end state - one prescription, intake approved - already
+    // holds, and routeToPharmacy is idempotent.
+    if (err && err.code === '23505') {
+      const winner = await prescriptionModel.findByIntakeSubmissionId(submission.id);
+      if (winner) {
+        logger.info('Concurrent signed-prescription race; using the winning prescription', {
+          intakeSubmissionId: submission.id,
+        });
+        await routeToPharmacy(winner);
+        return winner;
+      }
+    }
+    throw err;
+  }
 
   await audit.record({
     actorUserId: submission.user_id,
@@ -92,6 +155,10 @@ async function applySignedPrescription(payload) {
     phiAccessed: true,
     metadata: { intakeSubmissionId: submission.id },
   });
+
+  // Route the signed prescription to the fulfillment pharmacy. Best-effort:
+  // it never fails the webhook, and it is idempotent on replay.
+  await routeToPharmacy(prescription);
 
   return prescription;
 }

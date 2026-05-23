@@ -378,10 +378,17 @@ export function sortedCategories() {
   });
 }
 
-// Categories shown to a given audience ('men' | 'women' | 'all').
+// Categories shown for a given audience filter ('men' | 'women' | 'all').
+// The 'all' filter is the no-op view and must show every category, including
+// the men- and women-specific ones; a narrower filter shows the universal
+// categories plus that audience's own. A filter set to 'all' never hides rows.
 export function categoriesForAudience(audience) {
   return sortedCategories().filter(function (category) {
-    return category.audience === 'all' || category.audience === audience;
+    return (
+      audience === 'all' ||
+      category.audience === 'all' ||
+      category.audience === audience
+    );
   });
 }
 

@@ -37,12 +37,16 @@ pnrx-app-shell {
 }
 
 .pnrx-shell__brand {
-  font-size: var(--text-lg);
-  font-weight: var(--weight-bold);
-  letter-spacing: var(--tracking-wide);
-  color: var(--color-accent);
+  display: inline-flex;
+  align-items: center;
   text-decoration: none;
-  text-shadow: var(--glow-text-teal);
+}
+
+.pnrx-shell__logo {
+  display: block;
+  height: 52px;
+  width: auto;
+  border-radius: var(--radius-sm);
 }
 
 .pnrx-shell__nav {
@@ -105,23 +109,26 @@ pnrx-app-shell {
 
 /* -- Footer ----------------------------------------------------------------- */
 .pnrx-shell__footer {
-  padding: var(--space-5) var(--layout-gutter);
+  padding: var(--space-4) var(--layout-gutter);
   background: var(--color-bg-canvas);
   border-top: var(--border-hairline);
 }
 
-.pnrx-shell__disclosure {
-  max-width: 80ch;
-  margin: 0 auto var(--space-2);
-  font-size: var(--text-xs);
-  line-height: var(--leading-base);
-  color: var(--color-text-muted);
-  text-align: center;
-}
-
-.pnrx-shell__copyright {
+.pnrx-shell__legal {
   margin: 0;
   font-size: var(--text-xs);
   color: var(--color-text-muted);
   text-align: center;
+  letter-spacing: 0.01em;
+}
+
+.pnrx-shell__legal-link {
+  color: var(--color-text-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+.pnrx-shell__legal-link:hover {
+  color: var(--color-text-secondary);
 }

@@ -2,9 +2,8 @@
 
 // ============================================================================
 // Auth routes: register, login, refresh, logout, and the /me profile read.
-// The credential endpoints sit behind the strict credentialLimiter; refresh
-// and logout sit behind the separate, more generous refreshLimiter; /me sits
-// behind the authenticate middleware.
+// The mutating credential endpoints sit behind the stricter credentialLimiter;
+// /me sits behind the authenticate middleware.
 // ============================================================================
 
 const express = require('express');

@@ -23,6 +23,18 @@ const pharmacyClient = require('./client');
 async function routeApprovedPrescription(input) {
   const prescription = input.prescription;
 
+  // Idempotency: a prescription is routed to exactly one pharmacy order. If
+  // one already exists (a webhook replay, or a re-run of routing), return it
+  // unchanged rather than creating a duplicate fulfillment order.
+  const existingOrder = await pharmacyOrderModel.findByPrescriptionId(prescription.id);
+  if (existingOrder) {
+    logger.info('Prescription already routed; returning the existing order', {
+      prescriptionId: prescription.id,
+      pharmacyOrderId: existingOrder.id,
+    });
+    return existingOrder;
+  }
+
   // Always persist the order locally first.
   let order = await pharmacyOrderModel.create({
     prescriptionId: prescription.id,

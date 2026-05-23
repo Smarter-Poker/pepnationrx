@@ -25,6 +25,7 @@ services:
       - ./database/migrations/0003_catalog_seed.sql:/docker-entrypoint-initdb.d/03-catalog-seed.sql:ro
       - ./database/migrations/0004_user_state.sql:/docker-entrypoint-initdb.d/04-user-state.sql:ro
       - ./database/migrations/0005_checkin_unique_open.sql:/docker-entrypoint-initdb.d/05-checkin-unique-open.sql:ro
+      - ./database/migrations/0006_prescription_one_per_intake.sql:/docker-entrypoint-initdb.d/06-prescription-one-per-intake.sql:ro
     ports:
       - "5432:5432"
     healthcheck:

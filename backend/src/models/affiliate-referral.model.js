@@ -42,7 +42,57 @@ async function countsForAffiliate(affiliateId) {
   };
 }
 
+// Record a referral landing: a visit through an affiliate's /?ref= link,
+// before the visitor has registered or converted. referred_user_id,
+// subscription_id, and converted_at stay null until the referral converts.
+// landed_at defaults to now(). Returns the created row.
+async function recordLanding(data) {
+  return queryOne(
+    'INSERT INTO affiliate_referrals (affiliate_id, referral_link_slug) ' +
+      'VALUES ($1, $2) RETURNING ' + COLUMNS,
+    [data.affiliateId, data.referralLinkSlug]
+  );
+}
+
+// Mark a landed referral converted: the referred patient has subscribed.
+// Only a still-unconverted row belonging to the named affiliate is updated,
+// so a replay - or a referral id that does not match this affiliate - is a
+// no-op. Returns the updated row, or null when nothing matched. An optional
+// `client` runs the update inside an open transaction.
+async function markConverted(id, data, client) {
+  return queryOne(
+    'UPDATE affiliate_referrals ' +
+      'SET converted_at = now(), referred_user_id = $2, subscription_id = $3 ' +
+      'WHERE id = $1 AND affiliate_id = $4 AND converted_at IS NULL ' +
+      'RETURNING ' + COLUMNS,
+    [id, data.referredUserId || null, data.subscriptionId || null, data.affiliateId],
+    client
+  );
+}
+
+// Record a referral that converted with no tracked landing: a patient who
+// entered an affiliate code directly at checkout. landed_at and converted_at
+// are both stamped now. An optional `client` runs the insert in a transaction.
+async function recordDirectConversion(data, client) {
+  return queryOne(
+    'INSERT INTO affiliate_referrals ' +
+      '(affiliate_id, referred_user_id, subscription_id, referral_link_slug, ' +
+      ' converted_at) ' +
+      'VALUES ($1, $2, $3, $4, now()) RETURNING ' + COLUMNS,
+    [
+      data.affiliateId,
+      data.referredUserId || null,
+      data.subscriptionId || null,
+      data.referralLinkSlug,
+    ],
+    client
+  );
+}
+
 module.exports = {
   findByAffiliateId: findByAffiliateId,
   countsForAffiliate: countsForAffiliate,
+  recordLanding: recordLanding,
+  markConverted: markConverted,
+  recordDirectConversion: recordDirectConversion,
 };

@@ -24,13 +24,16 @@ async function findByAffiliateId(affiliateId) {
   return result.rows;
 }
 
-// Paid and not-yet-paid payout totals, in cents, for an affiliate. A payout
-// counts as paid only once its status is 'paid'.
+// Paid and pending payout totals, in cents, for an affiliate. "Paid" is
+// status 'paid'. "Pending" is money genuinely still on its way - status
+// 'pending' or 'scheduled'. A 'failed' payout is neither paid nor pending:
+// it is excluded from both totals and surfaces only as a row in the payout
+// ledger, so a failed transfer is never miscounted as money owed-and-coming.
 async function totalsForAffiliate(affiliateId) {
   const row = await queryOne(
     "SELECT " +
       "COALESCE(SUM(amount_cents) FILTER (WHERE status = 'paid'), 0)::bigint AS paid, " +
-      "COALESCE(SUM(amount_cents) FILTER (WHERE status <> 'paid'), 0)::bigint AS pending " +
+      "COALESCE(SUM(amount_cents) FILTER (WHERE status IN ('pending', 'scheduled')), 0)::bigint AS pending " +
       'FROM affiliate_payouts WHERE affiliate_id = $1',
     [affiliateId]
   );

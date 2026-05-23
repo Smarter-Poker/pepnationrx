@@ -19,4 +19,9 @@ router.get('/dashboard', authenticate, affiliateController.dashboard);
 // The affiliate's shareable referral link.
 router.get('/referral-link', authenticate, affiliateController.referralLink);
 
+// Record a referral landing from a /?ref= link. Public on purpose: a landing
+// happens before the visitor has signed in or has an account. Bounded by the
+// general per-IP rate limiter mounted on the whole API.
+router.post('/track-referral', affiliateController.trackReferral);
+
 module.exports = router;

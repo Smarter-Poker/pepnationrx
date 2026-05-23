@@ -97,7 +97,35 @@ async function referralLink(req, res, next) {
   }
 }
 
+// POST /api/affiliate/track-referral - record a referral landing from a
+// /?ref= link. Public: a landing happens before the visitor has an account.
+// Referral tracking is best-effort - an unknown or inactive code is ignored
+// rather than failing, so it never blocks a visitor from reaching the site.
+// The host application stores the returned referralId and presents it back at
+// checkout, where the referral is marked converted.
+async function trackReferral(req, res, next) {
+  try {
+    const raw = req.body && req.body.affiliateCode;
+    const code = typeof raw === 'string' ? raw.trim() : '';
+    if (!code || code.length > 64) {
+      return res.status(200).json({ referralId: null });
+    }
+    const affiliate = await affiliateModel.findByCode(code);
+    if (!affiliate || affiliate.is_active !== true) {
+      return res.status(200).json({ referralId: null });
+    }
+    const referral = await referralModel.recordLanding({
+      affiliateId: affiliate.id,
+      referralLinkSlug: affiliate.affiliate_code,
+    });
+    res.status(201).json({ referralId: referral ? referral.id : null });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   dashboard: dashboard,
   referralLink: referralLink,
+  trackReferral: trackReferral,
 };

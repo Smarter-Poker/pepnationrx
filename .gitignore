@@ -59,3 +59,4 @@ supabase/.temp
 # Misc
 *.tgz
 .cache/
+.vercel

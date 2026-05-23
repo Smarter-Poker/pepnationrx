@@ -64,7 +64,21 @@ async function request(method, path, body) {
   }
 
   const text = await response.text();
-  const parsed = text ? JSON.parse(text) : {};
+  let parsed = {};
+  if (text) {
+    try {
+      parsed = JSON.parse(text);
+    } catch (parseError) {
+      // A non-JSON body - a proxy error page, a gateway timeout - must still
+      // surface as a typed ApiError, never a raw SyntaxError, so callers can
+      // handle it uniformly.
+      throw new ApiError(
+        response.status || 0,
+        'invalid_response',
+        'The server returned an unexpected response.'
+      );
+    }
+  }
 
   if (!response.ok) {
     const error = parsed && parsed.error ? parsed.error : {};

@@ -46,6 +46,18 @@ async function findByExternalOrderId(externalOrderId) {
   );
 }
 
+// Find the pharmacy order for a prescription, if one exists. A prescription
+// routes to exactly one order; this backs the idempotency guard in the order
+// router so a replayed routing call returns the existing order instead of
+// creating a duplicate.
+async function findByPrescriptionId(prescriptionId) {
+  return queryOne(
+    'SELECT ' + COLUMNS + ' FROM pharmacy_orders WHERE prescription_id = $1 ' +
+      'ORDER BY created_at ASC LIMIT 1',
+    [prescriptionId]
+  );
+}
+
 // All pharmacy orders for a patient, newest first. Backs the patient
 // dashboard's shipment history.
 async function findByUserId(userId) {
@@ -97,6 +109,7 @@ module.exports = {
   create: create,
   findById: findById,
   findByExternalOrderId: findByExternalOrderId,
+  findByPrescriptionId: findByPrescriptionId,
   findByUserId: findByUserId,
   attachExternalOrderId: attachExternalOrderId,
   applyTrackingUpdate: applyTrackingUpdate,

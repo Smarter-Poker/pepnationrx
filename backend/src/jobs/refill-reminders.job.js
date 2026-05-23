@@ -23,15 +23,22 @@ const CHECKIN_LEAD_DAYS = 7;
 // When a subscription has no billing date, a check-in is due in this many days.
 const DEFAULT_CHECKIN_DAYS = 23;
 
-// Format a Date as an ISO date string (YYYY-MM-DD).
-function isoDate(date) {
-  return date.toISOString().slice(0, 10);
+// Format a Date as an ISO date string (YYYY-MM-DD) from its calendar-date
+// components. Using the components rather than toISOString keeps the result
+// independent of the process timezone: pg parses a DATE column into a Date
+// whose local components are exactly the stored calendar date, so a
+// next_billing_date is never shifted a day by a non-UTC server clock.
+function dateOnlyIso(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return year + '-' + month + '-' + day;
 }
 
 // Run the job. Returns a summary suitable for logging and auditing.
 async function run() {
   const today = new Date();
-  const todayIso = isoDate(today);
+  const todayIso = dateOnlyIso(today);
   const summary = { scheduled: 0, skipped: 0, missed: 0 };
 
   // 1. Any 'due' check-in past its date is now missed.
@@ -53,7 +60,7 @@ async function run() {
       due.setDate(due.getDate() + DEFAULT_CHECKIN_DAYS);
     }
     // A check-in is never scheduled in the past.
-    const dueDate = due.getTime() < today.getTime() ? todayIso : isoDate(due);
+    const dueDate = due.getTime() < today.getTime() ? todayIso : dateOnlyIso(due);
 
     const created = await monthlyCheckinModel.create({
       userId: sub.user_id,

@@ -22,19 +22,19 @@ import { placeCheckout, CHECKOUT_CONSENT_VERSION } from '../services/checkout.se
 // The MSO billing-agent disclosure. Kept identical to the text in the backend
 // constants module and ARCHITECTURE.md Section V.
 const MSO_DISCLOSURE =
-  'PepNationRX is a technology platform and management services organization. ' +
-  'We do not provide medical advice or care. All clinical services are ' +
-  'provided by independent, licensed medical practitioners. All compounded ' +
-  'medications are fulfilled by licensed, independent 503A compounding ' +
-  'pharmacies. By proceeding, you acknowledge that PepNationRX acts solely ' +
-  'as the designated billing agent.';
+  'PepNationRX Is A Technology Platform And Management Services Organization. ' +
+  'We Do Not Provide Medical Advice Or Care. All Clinical Services Are ' +
+  'Provided By Independent, Licensed Medical Practitioners. All Compounded ' +
+  'Medications Are Fulfilled By Licensed, Independent 503A Compounding ' +
+  'Pharmacies. By Proceeding, You Acknowledge That PepNationRX Acts Solely ' +
+  'As The Designated Billing Agent.';
 
 // The telehealth informed-consent summary shown at checkout.
 const TELEHEALTH_CONSENT =
-  'I consent to receive care through telehealth. I understand that an ' +
-  'independent, licensed provider will review my intake, that a treatment ' +
-  'plan is issued only when clinically appropriate, and that I may decline ' +
-  'or discontinue treatment at any time.';
+  'I Consent To Receive Care Through Telehealth. I Understand That An ' +
+  'Independent, Licensed Provider Will Review My Intake, That A Treatment ' +
+  'Plan Is Issued Only When Clinically Appropriate, And That I May Decline ' +
+  'Or Discontinue Treatment At Any Time.';
 
 // Format an integer cent amount as a US dollar string.
 function formatPrice(cents) {

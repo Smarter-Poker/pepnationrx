@@ -19,14 +19,9 @@ import { restoreSession, logout } from '../services/auth.service.js';
 import { submitIntake } from '../services/intake.service.js';
 import { showToast } from '../utils/toast.js';
 
-// The mandatory MSO billing-agent disclosure. Kept identical to the backend
-// constants module and ARCHITECTURE.md Section V.
-const MSO_DISCLOSURE =
-  'PepNationRX is a technology platform and management services organization. ' +
-  'We do not provide medical advice or care. All clinical services are ' +
-  'provided by independent, licensed medical practitioners. All compounded ' +
-  'medications are fulfilled by licensed, independent 503A compounding ' +
-  'pharmacies. PepNationRX acts solely as the designated billing agent.';
+// Note: The full MSO billing-agent disclosure lives in pnrx-checkout.js
+// where the patient actively acknowledges it before placing an order.
+// The footer carries only the minimal required attribution line.
 
 // Importing the feature components registers their custom elements so the
 // router can create them by tag name.
@@ -55,14 +50,21 @@ export class PnrxAppShell extends HTMLElement {
     this.innerHTML =
       '<div class="pnrx-shell">' +
       '<header class="pnrx-shell__header">' +
-      '<a class="pnrx-shell__brand" href="#/catalog">PepNationRX</a>' +
+      '<a class="pnrx-shell__brand" href="#/catalog" aria-label="PepNationRX">' +
+      '<img class="pnrx-shell__logo" ' +
+      'src="assets/images/pepnationrx-logo.jpg" ' +
+      'alt="PepNationRX" />' +
+      '</a>' +
       '<nav class="pnrx-shell__nav" id="pnrx-shell-nav"></nav>' +
       '</header>' +
       '<main class="pnrx-shell__outlet" id="pnrx-shell-outlet"></main>' +
       '<footer class="pnrx-shell__footer">' +
-      '<p class="pnrx-shell__disclosure">' + MSO_DISCLOSURE + '</p>' +
-      '<p class="pnrx-shell__copyright">PepNationRX. Telehealth Services ' +
-      'Provided By Independent Licensed Providers.</p>' +
+      '<p class="pnrx-shell__legal">' +
+      '&copy; ' + new Date().getFullYear() + ' PepNationRX &mdash; ' +
+      'Telehealth Services Provided By Independent Licensed Practitioners. ' +
+      '<a class="pnrx-shell__legal-link" href="#/terms">Terms</a> &middot; ' +
+      '<a class="pnrx-shell__legal-link" href="#/privacy">Privacy</a>' +
+      '</p>' +
       '</footer>' +
       '</div>';
 
