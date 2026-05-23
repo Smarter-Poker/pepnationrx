@@ -64,7 +64,7 @@ export class PnrxPatientDashboard extends PnrxComponent {
     } catch (err) {
       this.setState({
         status: 'error',
-        error: err && err.message ? err.message : 'Your dashboard could not be loaded.',
+        error: err && err.message ? err.message : 'Your Dashboard Could Not Be Loaded.',
       });
     }
   }

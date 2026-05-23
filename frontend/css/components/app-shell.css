@@ -136,3 +136,23 @@ pnrx-app-shell {
 .pnrx-shell__legal-link:hover {
   color: var(--color-text-secondary);
 }
+
+/* -- Legal placeholder pages (/terms /privacy /legal) ----------------------- */
+.pnrx-shell__legal-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-4);
+}
+
+.pnrx-shell__legal-page-title {
+  margin: 0 0 var(--space-4);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  color: var(--white-soft);
+}
+
+.pnrx-shell__legal-page-body {
+  font-size: var(--text-md);
+  line-height: var(--leading-base);
+  color: var(--color-text-secondary);
+}

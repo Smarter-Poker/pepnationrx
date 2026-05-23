@@ -6,9 +6,10 @@
 // flow: a catalog selection opens the triage intake, a completed intake opens
 // checkout, and a completed checkout opens the patient dashboard.
 //
-// The footer carries the mandatory MSO billing-agent disclosure. It must not
-// be removed: PepNationRX is the designated billing agent, not the provider
-// or pharmacy, and that disclosure is shown on every screen.
+// The footer carries a compact legal attribution line and links to the Terms Of
+// Service, Privacy Policy, and Legal Notices routes defined in buildRoutes().
+// The full MSO billing-agent consent disclosure is in pnrx-checkout.js where
+// the patient actively acknowledges it before placing an order.
 // ============================================================================
 
 'use strict';
@@ -160,6 +161,37 @@ export class PnrxAppShell extends HTMLElement {
         el.setAttribute('mode', 'register');
         return el;
       },
+      '/terms': function () {
+        return self.renderLegalPage(
+          'Terms Of Service',
+          'Our full Terms Of Service govern your use of this platform. ' +
+          'This page will contain the complete text when the platform launches. ' +
+          'Key terms: PepNationRX is a technology platform, not a medical provider. ' +
+          'Clinical services are provided by independent, licensed practitioners. ' +
+          'A prescription is not guaranteed and is at the sole discretion of the clinician.'
+        );
+      },
+      '/privacy': function () {
+        return self.renderLegalPage(
+          'Privacy Policy',
+          'Our full Privacy Policy details how we handle your information. ' +
+          'This page will contain the complete text when the platform launches. ' +
+          'We do not share your health data with advertisers. We maintain a Business ' +
+          'Associate Agreement with all vendors who access protected health information.'
+        );
+      },
+      '/legal': function () {
+        return self.renderLegalPage(
+          'Legal Notices',
+          'Legal notices, MSO disclosure, and regulatory information. ' +
+          'PepNationRX is a technology platform and management services organization. ' +
+          'We do not provide medical advice or care. All clinical services are provided ' +
+          'by independent, licensed medical practitioners. All compounded medications are ' +
+          'fulfilled by licensed, independent 503A compounding pharmacies. ' +
+          'PepNationRX acts solely as the designated billing agent. ' +
+          'Compounded medications are not FDA-approved.'
+        );
+      },
     };
   }
 
@@ -169,6 +201,22 @@ export class PnrxAppShell extends HTMLElement {
     const div = document.createElement('div');
     div.className = 'pnrx-shell__notice';
     div.textContent = 'Please Sign In To Continue.';
+    return div;
+  }
+
+  // A simple static page for legal routes (/terms, /privacy, /legal).
+  // Renders a titled card with placeholder text until the full legal copy is
+  // authored. Returns a DOM node so the router can mount it directly.
+  renderLegalPage(title, body) {
+    const div = document.createElement('div');
+    div.className = 'pnrx-shell__legal-page';
+    div.innerHTML =
+      '<h2 class="pnrx-shell__legal-page-title">' +
+      title +
+      '</h2>' +
+      '<p class="pnrx-shell__legal-page-body">' +
+      body +
+      '</p>';
     return div;
   }
 

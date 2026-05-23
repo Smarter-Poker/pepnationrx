@@ -53,7 +53,7 @@ export class PnrxAdminDashboard extends PnrxComponent {
         error:
           err && err.message
             ? err.message
-            : 'The admin dashboard could not be loaded.',
+            : 'The Admin Dashboard Could Not Be Loaded.',
       });
     }
   }
