@@ -18,8 +18,10 @@ const COLUMNS =
 
 // Record one consent acknowledgement. consent_type is a consent_type enum
 // value; document_version identifies the exact text the user accepted;
-// accepted is the boolean the user submitted.
-async function record(data) {
+// accepted is the boolean the user submitted. An optional `client` runs the
+// insert inside an open transaction (checkout records every consent row, the
+// address, the subscription, and the transaction as one unit).
+async function record(data, client) {
   return queryOne(
     'INSERT INTO consents ' +
       '(user_id, consent_type, document_version, accepted, ip_address, user_agent) ' +
@@ -32,7 +34,8 @@ async function record(data) {
       data.accepted === true,
       data.ipAddress || null,
       data.userAgent || null,
-    ]
+    ],
+    client
   );
 }
 

@@ -24,8 +24,10 @@ const ACTIVE_STATUSES = ['trialing', 'active', 'past_due'];
 // a recurring protocol is not live revenue until a licensed provider has
 // reviewed the patient's intake. mrr_cents is the per-month price; affiliateId
 // and treatmentPlanId are optional. status defaults to 'pending_clinical_review'
-// and may be overridden only with another subscription_status enum value.
-async function create(data) {
+// and may be overridden only with another subscription_status enum value. An
+// optional `client` runs the insert inside an open transaction (checkout pairs
+// it with the consent, address, and transaction inserts as one unit).
+async function create(data, client) {
   return queryOne(
     'INSERT INTO subscriptions ' +
       '(user_id, protocol_category, plan_name, status, mrr_cents, currency, ' +
@@ -45,7 +47,8 @@ async function create(data) {
       data.nextBillingDate || null,
       data.affiliateId || null,
       data.treatmentPlanId || null,
-    ]
+    ],
+    client
   );
 }
 

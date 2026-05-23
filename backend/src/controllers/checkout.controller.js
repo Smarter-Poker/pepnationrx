@@ -22,6 +22,7 @@ const affiliateModel = require('../models/affiliate.model');
 const treatmentModel = require('../models/treatment.model');
 const subscriptionModel = require('../models/subscription.model');
 const transactionModel = require('../models/transaction.model');
+const { withTransaction } = require('../db/query');
 
 // Consent types the patient must accept on the checkout screen. The MSO
 // billing-agent disclosure and the telehealth informed-consent are the
@@ -58,7 +59,7 @@ function assertRequiredConsents(submitted) {
 
 // Resolve the shipping address: an existing address the patient owns, or a new
 // address supplied inline. Cold-chain pharmacy shipments require one.
-async function resolveShippingAddress(req, input) {
+async function resolveShippingAddress(req, input, client) {
   if (input.shippingAddressId) {
     const existing = await addressModel.findById(input.shippingAddressId);
     if (!existing || existing.user_id !== req.user.id) {
@@ -68,17 +69,20 @@ async function resolveShippingAddress(req, input) {
   }
   if (input.shippingAddress) {
     const a = input.shippingAddress;
-    return addressModel.create({
-      userId: req.user.id,
-      addressType: 'shipping',
-      line1: a.line1,
-      line2: a.line2 || null,
-      city: a.city,
-      state: a.state.toUpperCase(),
-      postalCode: a.postalCode,
-      country: (a.country || 'US').toUpperCase(),
-      isDefault: false,
-    });
+    return addressModel.create(
+      {
+        userId: req.user.id,
+        addressType: 'shipping',
+        line1: a.line1,
+        line2: a.line2 || null,
+        city: a.city,
+        state: a.state.toUpperCase(),
+        postalCode: a.postalCode,
+        country: (a.country || 'US').toUpperCase(),
+        isDefault: false,
+      },
+      client
+    );
   }
   throw errors.unprocessable('A shipping address is required to check out.');
 }
@@ -107,22 +111,12 @@ async function place(req, res, next) {
       );
     }
 
-    // Persist every consent acknowledgement the patient submitted.
-    const consentRows = [];
-    for (let i = 0; i < input.consents.length; i += 1) {
-      const c = input.consents[i];
-      const row = await consentModel.record({
-        userId: req.user.id,
-        consentType: c.consentType,
-        documentVersion: c.documentVersion,
-        accepted: c.accepted,
-        ipAddress: meta.ipAddress,
-        userAgent: meta.userAgent,
-      });
-      consentRows.push(row);
-    }
-
-    const address = await resolveShippingAddress(req, input);
+    // The protocol category comes from the catalog, not the request: when the
+    // treatment maps to a triage protocol that protocol is authoritative, so a
+    // client cannot mis-route the subscription into the wrong clinical queue.
+    // Treatments with no triage protocol (OTC items) keep the validated
+    // request value, since the catalog has none to override it with.
+    const protocolCategory = plan.protocol_category || input.protocolCategory;
 
     // Resolve the referring affiliate when a code was supplied. An unknown or
     // inactive code is ignored rather than failing the checkout.
@@ -148,34 +142,73 @@ async function place(req, res, next) {
       managementFeeCents: managementFeeCents,
     });
 
-    // Create the subscription. It is not live revenue until a provider has
-    // reviewed the intake, so it starts in 'pending_clinical_review'.
-    const subscription = await subscriptionModel.create({
-      userId: req.user.id,
-      protocolCategory: input.protocolCategory,
-      planName: plan.plan_name,
-      mrrCents: plan.price_cents,
-      currency: 'USD',
-      affiliateId: affiliateId,
-      treatmentPlanId: plan.plan_id,
-    });
-
-    // Record the pending tri-party transaction. The medical practice is the
-    // Merchant of Record; the platform account collects the management fee.
     const stripe = config.integrations.stripe;
     const merchantOfRecord =
       stripe.medicalPracticeAccountId || stripe.platformAccountId || 'unconfigured';
-    const transaction = await transactionModel.create({
-      userId: req.user.id,
-      subscriptionId: subscription.id,
-      merchantOfRecord: merchantOfRecord,
-      providerAccountId: stripe.providerAccountId || null,
-      platformAccountId: stripe.platformAccountId || null,
-      grossAmountCents: split.grossAmountCents,
-      consultFeeCents: split.consultFeeCents,
-      managementFeeCents: split.managementFeeCents,
-      currency: 'USD',
-      status: 'requires_payment',
+
+    // Persist the consent rows, the shipping address, the subscription, and
+    // the transaction as one unit. A failure partway through rolls every write
+    // back rather than leaving, for example, a subscription with no
+    // transaction or orphaned consent rows.
+    const placed = await withTransaction(async function (client) {
+      const consentRows = [];
+      for (let i = 0; i < input.consents.length; i += 1) {
+        const c = input.consents[i];
+        const row = await consentModel.record(
+          {
+            userId: req.user.id,
+            consentType: c.consentType,
+            documentVersion: c.documentVersion,
+            accepted: c.accepted,
+            ipAddress: meta.ipAddress,
+            userAgent: meta.userAgent,
+          },
+          client
+        );
+        consentRows.push(row);
+      }
+
+      const address = await resolveShippingAddress(req, input, client);
+
+      // The subscription is not live revenue until a provider has reviewed the
+      // intake, so it starts in 'pending_clinical_review'.
+      const subscription = await subscriptionModel.create(
+        {
+          userId: req.user.id,
+          protocolCategory: protocolCategory,
+          planName: plan.plan_name,
+          mrrCents: plan.price_cents,
+          currency: 'USD',
+          affiliateId: affiliateId,
+          treatmentPlanId: plan.plan_id,
+        },
+        client
+      );
+
+      // Record the pending tri-party transaction. The medical practice is the
+      // Merchant of Record; the platform account collects the management fee.
+      const transaction = await transactionModel.create(
+        {
+          userId: req.user.id,
+          subscriptionId: subscription.id,
+          merchantOfRecord: merchantOfRecord,
+          providerAccountId: stripe.providerAccountId || null,
+          platformAccountId: stripe.platformAccountId || null,
+          grossAmountCents: split.grossAmountCents,
+          consultFeeCents: split.consultFeeCents,
+          managementFeeCents: split.managementFeeCents,
+          currency: 'USD',
+          status: 'requires_payment',
+        },
+        client
+      );
+
+      return {
+        consentRows: consentRows,
+        address: address,
+        subscription: subscription,
+        transaction: transaction,
+      };
     });
 
     await audit.record({
@@ -183,16 +216,16 @@ async function place(req, res, next) {
       actorRole: req.user.role,
       action: 'checkout.placed',
       entityType: 'subscription',
-      entityId: subscription.id,
+      entityId: placed.subscription.id,
       ipAddress: meta.ipAddress,
       userAgent: meta.userAgent,
     });
 
     res.status(201).json({
-      subscription: subscription,
-      transaction: transaction,
-      address: address,
-      consents: consentRows,
+      subscription: placed.subscription,
+      transaction: placed.transaction,
+      address: placed.address,
+      consents: placed.consentRows,
       pricing: {
         grossAmountCents: split.grossAmountCents,
         consultFeeCents: split.consultFeeCents,

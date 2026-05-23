@@ -15,8 +15,10 @@ const COLUMNS =
   'country, is_default, created_at, updated_at';
 
 // Insert an address. address_type defaults to 'shipping'; state is a two-letter
-// code and country defaults to 'US'.
-async function create(data) {
+// code and country defaults to 'US'. An optional `client` runs the insert
+// inside an open transaction (checkout pairs it with the subscription and
+// transaction inserts so the order is recorded as one unit).
+async function create(data, client) {
   return queryOne(
     'INSERT INTO addresses ' +
       '(user_id, address_type, line1, line2, city, state, postal_code, ' +
@@ -33,7 +35,8 @@ async function create(data) {
       data.postalCode,
       data.country || 'US',
       data.isDefault === true,
-    ]
+    ],
+    client
   );
 }
 

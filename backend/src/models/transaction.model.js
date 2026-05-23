@@ -18,8 +18,10 @@ const COLUMNS =
 // charge settles, so the row starts in 'requires_payment'. merchant_of_record
 // is the medical practice account (NOT NULL); providerAccountId and
 // platformAccountId are the consult-fee and management-fee destinations and may
-// be empty until the connected accounts are provisioned.
-async function create(data) {
+// be empty until the connected accounts are provisioned. An optional `client`
+// runs the insert inside an open transaction (checkout pairs it with the
+// consent, address, and subscription inserts as one unit).
+async function create(data, client) {
   return queryOne(
     'INSERT INTO transactions ' +
       '(user_id, subscription_id, merchant_of_record, provider_account_id, ' +
@@ -38,7 +40,8 @@ async function create(data) {
       Number.isInteger(data.managementFeeCents) ? data.managementFeeCents : 0,
       data.currency || 'USD',
       data.status || 'requires_payment',
-    ]
+    ],
+    client
   );
 }
 
