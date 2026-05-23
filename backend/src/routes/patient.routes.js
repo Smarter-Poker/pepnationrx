@@ -32,4 +32,16 @@ router.post(
 );
 router.delete('/addresses/:addressId', authenticate, patientController.deleteAddress);
 
+// Notification preferences: the patient's per-channel opt-in.
+router.get(
+  '/notification-preferences',
+  authenticate,
+  patientController.getNotificationPreferences
+);
+router.put(
+  '/notification-preferences',
+  authenticate,
+  patientController.updateNotificationPreferences
+);
+
 module.exports = router;

@@ -15,6 +15,7 @@ const prescriptionModel = require('../models/prescription.model');
 const pharmacyOrderModel = require('../models/pharmacy-order.model');
 const transactionModel = require('../models/transaction.model');
 const addressModel = require('../models/address.model');
+const notificationModel = require('../models/notification.model');
 const audit = require('../services/audit.service');
 const errors = require('../utils/errors');
 
@@ -182,10 +183,71 @@ async function deleteAddress(req, res, next) {
   }
 }
 
+// GET /api/patient/notification-preferences
+// The patient's per-channel notification opt-in. A patient with no stored
+// row receives the platform defaults (email on, SMS off).
+async function getNotificationPreferences(req, res, next) {
+  try {
+    const preferences = await notificationModel.getPreferences(req.user.id);
+    res.status(200).json({
+      preferences: {
+        emailEnabled: preferences.email_enabled !== false,
+        smsEnabled: preferences.sms_enabled === true,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// PUT /api/patient/notification-preferences
+// Update the patient's per-channel notification opt-in. Both flags are
+// optional; an omitted flag keeps its current value.
+async function updateNotificationPreferences(req, res, next) {
+  try {
+    const current = await notificationModel.getPreferences(req.user.id);
+    const emailEnabled =
+      typeof req.body.emailEnabled === 'boolean'
+        ? req.body.emailEnabled
+        : current.email_enabled !== false;
+    const smsEnabled =
+      typeof req.body.smsEnabled === 'boolean'
+        ? req.body.smsEnabled
+        : current.sms_enabled === true;
+
+    const row = await notificationModel.upsertPreferences(req.user.id, {
+      emailEnabled: emailEnabled,
+      smsEnabled: smsEnabled,
+    });
+
+    await audit.record({
+      actorUserId: req.user.id,
+      actorRole: req.user.role,
+      action: 'patient.notification_preferences.updated',
+      entityType: 'notification_preferences',
+      entityId: req.user.id,
+      phiAccessed: false,
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent') || null,
+    });
+
+    res.status(200).json({
+      preferences: {
+        emailEnabled: row.email_enabled !== false,
+        smsEnabled: row.sms_enabled === true,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   dashboard: dashboard,
   cancelSubscription: cancelSubscription,
   updateAddress: updateAddress,
   setDefaultAddress: setDefaultAddress,
   deleteAddress: deleteAddress,
+  getNotificationPreferences: getNotificationPreferences,
+  updateNotificationPreferences: updateNotificationPreferences,
 };

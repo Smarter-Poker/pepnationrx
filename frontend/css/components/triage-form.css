@@ -15,25 +15,26 @@ pnrx-triage-form {
   font-family: var(--font-sans);
 }
 
-/* ── Page wrapper ─────────────────────────────────────────────────────────── */
+/* ── Page wrapper — fills full viewport ─────────────────────────────────── */
 .pnrx-triage-page {
   min-height: calc(100vh - var(--nav-height));
+  width: 100%;
   background: var(--color-bg);
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: var(--space-7) var(--layout-gutter) var(--space-8);
+  padding: var(--space-6) var(--layout-gutter) var(--space-8);
 }
 
-/* ── Outer panel ─────────────────────────────────────────────────────────── */
+/* ── Outer panel — full width, fills viewport ─────────────────────────────── */
 .pnrx-triage {
   width: 100%;
-  max-width: 700px;
+  max-width: 960px;
   background: var(--white);
   border: 1px solid var(--canvas-200);
   border-radius: var(--radius-xl);
   box-shadow: var(--elev-3);
-  padding: var(--space-7) clamp(var(--space-5), 5vw, var(--space-7));
+  padding: var(--space-7) clamp(var(--space-5), 5vw, var(--space-8));
 }
 
 /* ── Header ──────────────────────────────────────────────────────────────── */
@@ -94,16 +95,11 @@ pnrx-triage-form {
   margin-bottom: var(--space-6);
 }
 
-/* ── Protocol selection grid ─────────────────────────────────────────────── */
-/*
-   Each card: white, clear border, icon bubble top-left, bold name,
-   muted blurb, subtle right-arrow. On hover: lift + teal border.
-   On selected: teal border + teal-50 background.
-*/
+/* ── Protocol selection grid — 3 columns on desktop ─────────────────────── */
 .pnrx-triage__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-4);
   margin-bottom: var(--space-6);
 }
 
@@ -169,19 +165,19 @@ pnrx-triage-form {
   line-height: 1;
 }
 
-/* Protocol icon — emoji in a light teal bubble */
+/* Protocol icon — SVG in a teal bubble */
 .pnrx-triage__card-icon {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   background: var(--teal-50);
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.375rem;
   flex-shrink: 0;
-  margin-bottom: var(--space-1);
+  margin-bottom: var(--space-2);
   border: 1px solid var(--teal-100);
+  color: var(--teal-500);
 }
 
 /* Protocol name */
@@ -464,14 +460,23 @@ pnrx-triage-form {
 }
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */
-@media (max-width: 540px) {
+@media (max-width: 600px) {
   .pnrx-triage {
     padding: var(--space-5) var(--space-4) var(--space-6);
     border-radius: var(--radius-lg);
+    border-left: none;
+    border-right: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .pnrx-triage-page {
+    padding: 0 0 var(--space-8);
   }
 
   .pnrx-triage__grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3);
   }
 
   .pnrx-triage__foot,
@@ -486,5 +491,11 @@ pnrx-triage-form {
     width: 100%;
     text-align: center;
     justify-content: center;
+  }
+}
+
+@media (max-width: 400px) {
+  .pnrx-triage__grid {
+    grid-template-columns: 1fr;
   }
 }

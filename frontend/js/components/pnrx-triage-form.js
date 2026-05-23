@@ -326,29 +326,31 @@ export class PnrxTriageForm extends PnrxComponent {
     }
 
     return (
+      '<div class="pnrx-triage-page">' +
       '<div class="pnrx-triage">' +
       body +
       '<p class="pnrx-triage__legal">This Questionnaire Is A Clinical Screening ' +
       'Tool, Not A Diagnosis. Every Response Is Reviewed By An Independent, ' +
       'Licensed Clinician Before Any Treatment Is Offered.</p>' +
+      '</div>' +
       '</div>'
     );
   }
 
   renderProtocolScreen() {
-    // Icon map keyed to protocol id — displayed in a teal bubble on each card.
+    // Clinical SVG icons — NO emojis. Simple line-art at 24x24 viewBox.
     const ICONS = {
-      trt:               '⚡',
-      weight_management: '🎯',
-      peptide_therapy:   '🔬',
-      mens_optimization: '💪',
-      womens_wellness:   '🌿',
-      sexual_health:     '🛡️',
-      longevity:         '⏳',
+      trt: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>',
+      weight_management: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm0 0v3m0 0H6.5a2.5 2.5 0 0 0 0 5H12m0-5h5.5a2.5 2.5 0 0 1 0 5H12m0 0v9M4 21h16"/></svg>',
+      peptide_therapy: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3m-3.5-7.5-2.1 2.1M7.6 16.4l-2.1 2.1m0-13.1 2.1 2.1m8.7 8.7 2.1 2.1"/></svg>',
+      mens_optimization: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M4 20 20 4m0 0h-6m6 0v6"/><circle cx="9" cy="15" r="5"/></svg>',
+      womens_wellness: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="9" r="6"/><path d="M12 15v6m-3-3h6"/></svg>',
+      sexual_health: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+      longevity: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>',
     };
 
     const cards = PROTOCOLS.map(function (protocol) {
-      const icon = ICONS[protocol.id] || '✦';
+      const icon = ICONS[protocol.id] || '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>';
       return (
         '<button type="button" class="pnrx-triage__card" data-protocol="' +
         escapeHtml(protocol.id) +

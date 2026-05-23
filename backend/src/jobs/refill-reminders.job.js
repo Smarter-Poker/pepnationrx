@@ -15,6 +15,7 @@
 
 const logger = require('../utils/logger');
 const audit = require('../services/audit.service');
+const notificationService = require('../services/notification');
 const subscriptionModel = require('../models/subscription.model');
 const monthlyCheckinModel = require('../models/monthly-checkin.model');
 
@@ -39,7 +40,7 @@ function dateOnlyIso(date) {
 async function run() {
   const today = new Date();
   const todayIso = dateOnlyIso(today);
-  const summary = { scheduled: 0, skipped: 0, missed: 0 };
+  const summary = { scheduled: 0, skipped: 0, missed: 0, notified: 0 };
 
   // 1. Any 'due' check-in past its date is now missed.
   summary.missed = await monthlyCheckinModel.markOverdueMissed(todayIso);
@@ -69,6 +70,19 @@ async function run() {
     });
     if (created) {
       summary.scheduled += 1;
+      // Tell the patient a check-in is due. The dedupe key ties the email to
+      // this exact check-in row, so a re-run never sends a second reminder.
+      // The notification service never throws, so a send failure here cannot
+      // disrupt scheduling.
+      const sent = await notificationService.send({
+        userId: sub.user_id,
+        template: 'checkin_due',
+        payload: { dueDate: dueDate },
+        dedupeKey: 'checkin-due:' + created.id,
+      });
+      if (sent && sent.ok && !sent.duplicate && !sent.skipped) {
+        summary.notified += 1;
+      }
     } else {
       // A concurrent run scheduled this subscription's check-in first; the
       // partial unique index turned the duplicate insert into a no-op.

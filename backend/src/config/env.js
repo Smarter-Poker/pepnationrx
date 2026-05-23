@@ -108,6 +108,15 @@ const config = {
       medicalPracticeAccountId: optional('STRIPE_MEDICAL_PRACTICE_ACCOUNT_ID', ''),
       providerAccountId: optional('STRIPE_PROVIDER_ACCOUNT_ID', ''),
     },
+    // Transactional notifications. Optional so the API boots without an email
+    // provider; the email adapter simulates delivery until a key is present.
+    notifications: {
+      emailApiKey: optional('NOTIFICATION_EMAIL_API_KEY', ''),
+      emailFrom: optional(
+        'NOTIFICATION_EMAIL_FROM',
+        'PepNationRX <noreply@pepnationrx.com>'
+      ),
+    },
   },
 };
 
