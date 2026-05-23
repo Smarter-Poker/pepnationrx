@@ -62,8 +62,15 @@ export class PnrxAppShell extends HTMLElement {
       '<p class="pnrx-shell__legal">' +
       '&copy; ' + new Date().getFullYear() + ' PepNationRX &mdash; ' +
       'Telehealth Services Provided By Independent Licensed Practitioners. ' +
-      '<a class="pnrx-shell__legal-link" href="#/terms">Terms</a> &middot; ' +
-      '<a class="pnrx-shell__legal-link" href="#/privacy">Privacy</a>' +
+      'Not A Medical Provider. Not Insurance. Not Available In All States. ' +
+      'Not For Emergencies &mdash; Call 911.' +
+      '</p>' +
+      '<p class="pnrx-shell__legal pnrx-shell__legal--links">' +
+      '<a class="pnrx-shell__legal-link" href="#/terms">Terms Of Service</a>' +
+      ' &middot; ' +
+      '<a class="pnrx-shell__legal-link" href="#/privacy">Privacy Policy</a>' +
+      ' &middot; ' +
+      '<a class="pnrx-shell__legal-link" href="#/legal">Legal Notices</a>' +
       '</p>' +
       '</footer>' +
       '</div>';

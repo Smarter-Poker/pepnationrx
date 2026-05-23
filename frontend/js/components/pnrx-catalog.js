@@ -289,9 +289,19 @@ export class PnrxCatalog extends PnrxComponent {
       '<div class="pnrx-catalog__foot">' +
       cta +
       '</div>' +
+      (treatment.compound !== 'branded' && treatment.compound !== 'otc'
+        ? '<p class="pnrx-catalog__legal pnrx-catalog__legal--compound">' +
+          '*Compounded Medications Are Not FDA-Approved. The FDA Does Not Evaluate ' +
+          'Compounded Drug Products For Safety, Effectiveness, Or Quality. Compounded ' +
+          'Medications Are Prepared By Licensed 503A Compounding Pharmacists For ' +
+          'Individual Patients Based On A Valid Prescription.' +
+          '</p>'
+        : '') +
       '<p class="pnrx-catalog__legal">All Prescriptions Require A Clinical ' +
-      'Intake Reviewed By An Independent, Licensed Provider. PepNationRX Acts ' +
-      'Solely As The Designated Billing Agent.</p>'
+      'Intake Reviewed By An Independent, Licensed Provider. A Prescription Is ' +
+      'Not Guaranteed And Is At The Sole Discretion Of The Clinician. ' +
+      'PepNationRX Acts Solely As The Designated Billing Agent. Not Available ' +
+      'In All States. Not Insurance. Not For Emergencies &mdash; Call 911.</p>'
     );
   }
 

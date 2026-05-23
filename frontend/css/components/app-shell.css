@@ -122,6 +122,10 @@ pnrx-app-shell {
   letter-spacing: 0.01em;
 }
 
+.pnrx-shell__legal--links {
+  margin-top: var(--space-2);
+}
+
 .pnrx-shell__legal-link {
   color: var(--color-text-muted);
   text-decoration: underline;

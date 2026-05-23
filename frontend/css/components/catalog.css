@@ -312,6 +312,14 @@ pnrx-catalog {
   color: var(--color-text-muted);
 }
 
+.pnrx-catalog__legal--compound {
+  margin-top: var(--space-4);
+  border-top: none;
+  padding-top: 0;
+  color: var(--color-text-muted);
+  opacity: 0.85;
+}
+
 /* -- Responsive ------------------------------------------------------------- */
 @media (max-width: 540px) {
   .pnrx-catalog__title {
