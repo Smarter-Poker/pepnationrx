@@ -9,7 +9,8 @@
 //      already have an open one.
 //
 // The job is idempotent: hasOpenCheckin guards against scheduling a duplicate,
-// so it is safe to run on any cadence (a daily cron is expected).
+// and a partial unique index makes the database the final arbiter, so it is
+// safe to run on any cadence (a daily cron is expected).
 // ============================================================================
 
 const logger = require('../utils/logger');
@@ -54,12 +55,18 @@ async function run() {
     // A check-in is never scheduled in the past.
     const dueDate = due.getTime() < today.getTime() ? todayIso : isoDate(due);
 
-    await monthlyCheckinModel.create({
+    const created = await monthlyCheckinModel.create({
       userId: sub.user_id,
       subscriptionId: sub.id,
       dueDate: dueDate,
     });
-    summary.scheduled += 1;
+    if (created) {
+      summary.scheduled += 1;
+    } else {
+      // A concurrent run scheduled this subscription's check-in first; the
+      // partial unique index turned the duplicate insert into a no-op.
+      summary.skipped += 1;
+    }
   }
 
   await audit.record({

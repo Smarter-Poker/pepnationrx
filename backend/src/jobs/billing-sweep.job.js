@@ -24,21 +24,34 @@ const subscriptionModel = require('../models/subscription.model');
 const GRACE_DAYS = 3;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
-// Format a Date as an ISO date string (YYYY-MM-DD).
-function isoDate(date) {
-  return date.toISOString().slice(0, 10);
+// Format a Date as an ISO date string (YYYY-MM-DD) from its calendar-date
+// components. Using the components rather than toISOString keeps the result
+// independent of the process timezone: pg parses a DATE column into a Date
+// whose local components are exactly the stored calendar date.
+function dateOnlyIso(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return year + '-' + month + '-' + day;
+}
+
+// Whole days from one YYYY-MM-DD date to another. Both ends are anchored at
+// UTC midnight so the day count is exact and never skewed by the timezone.
+function daysBetween(fromIso, toIso) {
+  const fromMs = Date.parse(fromIso + 'T00:00:00Z');
+  const toMs = Date.parse(toIso + 'T00:00:00Z');
+  return Math.round((toMs - fromMs) / MS_PER_DAY);
 }
 
 // Run the job. Returns a summary suitable for logging and auditing.
 async function run() {
-  const today = new Date();
+  const todayIso = dateOnlyIso(new Date());
   const summary = { renewalsDue: 0, markedPastDue: 0 };
 
-  const due = await subscriptionModel.findDueForBilling(isoDate(today));
+  const due = await subscriptionModel.findDueForBilling(todayIso);
   for (let i = 0; i < due.length; i += 1) {
     const sub = due[i];
-    const billDate = new Date(sub.next_billing_date);
-    const overdueDays = Math.floor((today.getTime() - billDate.getTime()) / MS_PER_DAY);
+    const overdueDays = daysBetween(dateOnlyIso(sub.next_billing_date), todayIso);
 
     if (overdueDays > GRACE_DAYS) {
       // The renewal window has lapsed with no confirmed payment.

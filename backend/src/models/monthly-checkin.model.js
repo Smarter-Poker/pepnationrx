@@ -18,12 +18,18 @@ const COLUMNS =
 // Statuses that count as an open (not yet resolved) check-in.
 const OPEN_STATUSES = ['due', 'submitted'];
 
-// Insert a check-in in the 'due' state. dueDate is an ISO date string.
+// Insert a check-in in the 'due' state. dueDate is an ISO date string. The
+// partial unique index from migration 0005 allows at most one open check-in
+// per subscription; ON CONFLICT against it turns a duplicate insert from a
+// racing job run into a no-op, so this returns null when the subscription
+// already has an open ('due' or 'submitted') check-in.
 async function create(data) {
   return queryOne(
     'INSERT INTO monthly_checkins ' +
       '(user_id, subscription_id, prescription_id, status, due_date) ' +
       "VALUES ($1, $2, $3, 'due', $4) " +
+      "ON CONFLICT (subscription_id) WHERE status IN ('due', 'submitted') " +
+      'DO NOTHING ' +
       'RETURNING ' + COLUMNS,
     [
       data.userId,
