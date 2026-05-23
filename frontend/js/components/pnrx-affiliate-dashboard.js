@@ -13,40 +13,14 @@
 
 import { PnrxComponent, escapeHtml } from '../core/component.js';
 import { api } from '../services/api.js';
+import { money, formatDate, humanize } from '../utils/format.js';
 
-// Format an integer cent amount as a dollar string.
-function money(cents) {
-  const value = Number(cents) || 0;
-  return '$' + (value / 100).toFixed(2);
-}
 
 // Format a 0..1 ratio as a whole-percent string.
 function percent(ratio) {
   return Math.round((Number(ratio) || 0) * 100) + '%';
 }
 
-// Format an ISO date as a short readable date, or a fallback.
-function formatDate(value, fallback) {
-  if (!value) return fallback || 'Not Available';
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return fallback || 'Not Available';
-  return parsed.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-}
-
-// Convert a snake_case enum value into a Title Case label.
-function humanize(value) {
-  if (!value) return '';
-  return String(value)
-    .split('_')
-    .map(function (word) {
-      return word.charAt(0).toUpperCase() + word.slice(1);
-    })
-    .join(' ');
-}
 
 export class PnrxAffiliateDashboard extends PnrxComponent {
   constructor() {
@@ -70,7 +44,7 @@ export class PnrxAffiliateDashboard extends PnrxComponent {
     } catch (err) {
       this.setState({
         status: 'error',
-        error: err && err.message ? err.message : 'Your dashboard could not be loaded.',
+        error: err && err.message ? err.message : 'Your Affiliate Dashboard Could Not Be Loaded.',
       });
     }
   }
