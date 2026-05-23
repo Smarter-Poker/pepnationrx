@@ -1,88 +1,91 @@
 /* ============================================================================
-   PEPNATIONRX.COM - CHECKOUT COMPONENT STYLES
-   File: frontend/css/components/checkout.css
-   ----------------------------------------------------------------------------
-   Styles the <pnrx-checkout> Web Component. Every value references a token
-   from css/variables.css; no raw colors are introduced here.
+   PEPNATIONRX — CHECKOUT COMPONENT
+   Two-column checkout flow — form on the left, order summary on the right.
    ============================================================================ */
 
-pnrx-checkout {
-  display: block;
-  width: 100%;
-  max-width: var(--layout-max-width);
-  margin: 0 auto;
-  font-family: var(--font-sans);
-  color: var(--color-text-primary);
-}
-
+/* ---- Outer page wrapper ---- */
 .pnrx-checkout {
-  padding: var(--space-2);
+  background: var(--color-bg);
+  min-height: 100vh;
+  padding: var(--space-6) var(--space-5);
+  font-family: var(--font-sans);
 }
 
+/* ---- Page title ---- */
 .pnrx-checkout__title {
-  margin: 0 0 var(--space-6);
   font-size: var(--text-2xl);
   font-weight: var(--weight-bold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-6);
   line-height: var(--leading-tight);
-  color: var(--white-soft);
 }
 
+/* ---- Empty cart message ---- */
 .pnrx-checkout__empty {
-  padding: var(--space-7) var(--space-4);
+  background: var(--grey-100);
+  border: 1px solid var(--grey-150);
+  border-radius: var(--radius-lg);
+  padding: var(--space-7) var(--space-6);
   text-align: center;
-  color: var(--color-text-secondary);
-  font-size: var(--text-lg);
+  font-size: var(--text-md);
+  color: var(--color-text-muted);
 }
 
-/* -- Layout ----------------------------------------------------------------- */
+/* ---- Two-column layout grid ---- */
 .pnrx-checkout__layout {
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--space-5);
+  max-width: var(--layout-max-width);
+  margin-inline: auto;
+  align-items: start;
 }
 
-@media (min-width: 860px) {
+@media (min-width: 840px) {
   .pnrx-checkout__layout {
-    grid-template-columns: 1.6fr 1fr;
-    align-items: start;
+    grid-template-columns: 1fr 360px;
   }
 }
 
+/* ---- Main form column ---- */
 .pnrx-checkout__main {
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
 }
 
-/* -- Sections --------------------------------------------------------------- */
+/* ---- White section card ---- */
 .pnrx-checkout__section {
-  padding: var(--space-5);
   background: var(--color-surface);
-  border: var(--border-hairline);
+  border: 1px solid var(--grey-150);
   border-radius: var(--radius-lg);
-  box-shadow: var(--elev-2), var(--bevel-raised);
+  box-shadow: var(--elev-2);
+  padding: var(--space-5) var(--space-6);
 }
 
+/* ---- Section sub-heading ---- */
 .pnrx-checkout__subhead {
-  margin: 0 0 var(--space-3);
-  font-size: var(--text-lg);
-  font-weight: var(--weight-medium);
-  color: var(--white-soft);
-}
-
-.pnrx-checkout__hint {
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
+  color: var(--color-text-primary);
   margin: 0 0 var(--space-4);
-  font-size: var(--text-sm);
-  color: var(--color-text-secondary);
-  line-height: var(--leading-base);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--grey-150);
 }
 
-/* -- Fields ----------------------------------------------------------------- */
+/* ---- Hint text ---- */
+.pnrx-checkout__hint {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin: calc(-1 * var(--space-3)) 0 var(--space-4);
+}
+
+/* ---- Form field ---- */
 .pnrx-checkout__field {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-4);
 }
 
 .pnrx-checkout__field label {
@@ -91,181 +94,144 @@ pnrx-checkout {
   color: var(--color-text-secondary);
 }
 
-.pnrx-checkout__field input {
-  padding: var(--space-3);
+.pnrx-checkout__field input,
+.pnrx-checkout__field select {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
   font-family: var(--font-sans);
   font-size: var(--text-md);
   color: var(--color-text-primary);
-  background: var(--color-surface-recessed);
-  border: var(--border-hairline);
+  background: var(--grey-000);
+  border: 1px solid var(--grey-200);
   border-radius: var(--radius-md);
-  box-shadow: var(--bevel-inset);
-  transition: border-color var(--duration-fast) var(--ease-standard);
-}
-
-.pnrx-checkout__field input:focus {
   outline: none;
-  border-color: var(--color-focus-ring);
-  box-shadow: var(--bevel-inset), var(--glow-teal-soft);
+  appearance: none;
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
+  box-sizing: border-box;
 }
 
-.pnrx-checkout__row {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-3);
+.pnrx-checkout__field input::placeholder {
+  color: var(--grey-300);
 }
 
-@media (min-width: 540px) {
-  .pnrx-checkout__row {
-    grid-template-columns: 2fr 0.8fr 1.1fr;
-  }
+.pnrx-checkout__field input:focus,
+.pnrx-checkout__field select:focus {
+  border-color: var(--teal-500);
+  box-shadow: 0 0 0 3px hsla(174, 72%, 40%, 0.14);
 }
 
-/* -- Consent checkboxes ----------------------------------------------------- */
-.pnrx-checkout__consent {
-  display: flex;
-  gap: var(--space-3);
-  align-items: flex-start;
-  padding: var(--space-4);
-  margin-bottom: var(--space-3);
-  background: var(--color-surface-recessed);
-  border: var(--border-hairline);
-  border-radius: var(--radius-md);
-  font-size: var(--text-sm);
-  line-height: var(--leading-base);
-  color: var(--color-text-secondary);
-  cursor: pointer;
-}
-
-.pnrx-checkout__consent:last-child {
-  margin-bottom: 0;
-}
-
-.pnrx-checkout__consent input {
-  flex: 0 0 auto;
-  width: 20px;
-  height: 20px;
-  margin-top: 2px;
-  accent-color: var(--color-accent);
-  cursor: pointer;
-}
-
-/* -- Summary panel ---------------------------------------------------------- */
+/* ---- Order summary sidebar ---- */
 .pnrx-checkout__summary {
-  padding: var(--space-5);
-  background: var(--color-surface-raised);
-  border: var(--border-strong);
+  background: var(--grey-100);
+  border: 1px solid var(--grey-150);
   border-radius: var(--radius-lg);
-  box-shadow: var(--elev-3), var(--bevel-raised);
+  padding: var(--space-5);
+  position: sticky;
+  top: var(--space-5);
 }
 
-.pnrx-checkout__line {
+.pnrx-checkout__summary-title {
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--grey-150);
+}
+
+.pnrx-checkout__summary-row {
   display: flex;
   justify-content: space-between;
-  gap: var(--space-3);
+  align-items: baseline;
+  gap: var(--space-4);
   padding: var(--space-2) 0;
-  font-size: var(--text-md);
+  font-size: var(--text-sm);
   color: var(--color-text-secondary);
-  border-bottom: 1px solid var(--color-divider);
+  border-bottom: 1px solid var(--grey-150);
 }
 
-.pnrx-checkout__line strong {
-  color: var(--white-soft);
-  font-weight: var(--weight-medium);
-  text-align: right;
-}
-
-.pnrx-checkout__line--total {
-  margin-top: var(--space-2);
-  padding-top: var(--space-3);
+.pnrx-checkout__summary-row:last-of-type {
   border-bottom: none;
-  font-size: var(--text-lg);
 }
 
-.pnrx-checkout__line--total strong {
-  color: var(--color-accent);
+/* ---- Total row ---- */
+.pnrx-checkout__summary-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-4);
+  padding: var(--space-4) 0 0;
+  margin-top: var(--space-3);
+  border-top: 2px solid var(--grey-200);
+  font-size: var(--text-md);
   font-weight: var(--weight-bold);
-  text-shadow: var(--glow-text-teal);
-}
-
-.pnrx-checkout__note {
-  margin: var(--space-3) 0 0;
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
-  line-height: var(--leading-base);
-}
-
-.pnrx-checkout__error {
-  margin: var(--space-4) 0 0;
-  padding: var(--space-3);
-  font-size: var(--text-sm);
   color: var(--color-text-primary);
-  background: var(--color-surface-recessed);
-  border: var(--edge-blue);
-  border-radius: var(--radius-md);
 }
 
-/* -- Call to action --------------------------------------------------------- */
+/* ---- Big teal submit button ---- */
 .pnrx-checkout__cta {
+  display: block;
   width: 100%;
-  margin-top: var(--space-5);
-  padding: var(--space-4);
+  padding: var(--space-4) var(--space-5);
   font-family: var(--font-sans);
   font-size: var(--text-md);
-  font-weight: var(--weight-bold);
-  letter-spacing: var(--tracking-wide);
-  color: var(--color-text-inverse);
-  background: var(--metal-rail);
-  border: var(--edge-teal);
+  font-weight: var(--weight-medium);
+  color: var(--grey-000);
+  background: var(--teal-500);
+  border: none;
   border-radius: var(--radius-md);
-  box-shadow: var(--elev-2), var(--glow-teal-soft);
   cursor: pointer;
-  transition: box-shadow var(--duration-fast) var(--ease-standard),
+  text-align: center;
+  text-decoration: none;
+  margin-top: var(--space-5);
+  transition:
+    background var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard),
     transform var(--duration-fast) var(--ease-standard);
 }
 
-.pnrx-checkout__cta:hover:not(:disabled) {
-  box-shadow: var(--elev-3), var(--glow-teal);
+.pnrx-checkout__cta:hover {
+  background: var(--teal-400);
+  box-shadow: var(--elev-2);
   transform: translateY(-1px);
 }
 
-.pnrx-checkout__cta:active:not(:disabled) {
+.pnrx-checkout__cta:active {
+  background: var(--teal-300);
+  box-shadow: none;
   transform: translateY(0);
-  box-shadow: var(--bevel-inset);
 }
 
 .pnrx-checkout__cta:disabled {
-  opacity: 0.5;
+  background: var(--grey-300);
   cursor: not-allowed;
-  box-shadow: var(--elev-1);
+  transform: none;
+  box-shadow: none;
 }
 
+/* ---- Legal footnote ---- */
 .pnrx-checkout__legal {
-  margin: var(--space-4) 0 0;
   font-size: var(--text-xs);
   color: var(--color-text-muted);
-  line-height: var(--leading-base);
-}
-
-/* -- Success ---------------------------------------------------------------- */
-.pnrx-checkout__success {
-  padding: var(--space-7) var(--space-5);
   text-align: center;
-  background: var(--color-surface);
-  border: var(--edge-teal);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--elev-3), var(--glow-teal-soft);
+  margin-top: var(--space-4);
+  line-height: var(--leading-base);
 }
 
-.pnrx-checkout__success p {
-  max-width: 48ch;
-  margin: 0 auto var(--space-3);
-  color: var(--color-text-secondary);
-  line-height: var(--leading-base);
+/* ---- Success state ---- */
+.pnrx-checkout__success {
+  background: hsl(174, 60%, 96%);
+  border: 2px solid var(--teal-500);
+  border-radius: var(--radius-lg);
+  padding: var(--space-7) var(--space-6);
+  text-align: center;
 }
 
 .pnrx-checkout__ref {
-  font-family: var(--font-mono);
   font-size: var(--text-sm);
   color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  margin-top: var(--space-3);
 }

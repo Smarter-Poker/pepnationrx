@@ -1,175 +1,248 @@
 /* ============================================================================
-   PEPNATIONRX.COM - ADMIN DASHBOARD STYLES
-   File: frontend/css/components/admin.css
-   ----------------------------------------------------------------------------
-   Styles the <pnrx-admin-dashboard> Web Component. Every value references a
-   token from css/variables.css; no raw colors are introduced here.
+   PEPNATIONRX — ADMIN DASHBOARD COMPONENT
+   White cards, teal buttons, clean data tables with light header rows.
    ============================================================================ */
 
-pnrx-admin-dashboard {
-  display: block;
-  width: 100%;
-  max-width: var(--layout-max-width);
-  margin: 0 auto;
-  font-family: var(--font-sans);
-  color: var(--color-text-primary);
-}
-
+/* ---- Outer page wrapper ---- */
 .pnrx-admin {
-  padding: var(--space-2);
+  background: var(--color-bg);
+  min-height: 100vh;
+  padding: var(--space-6) var(--space-5);
+  font-family: var(--font-sans);
 }
 
-/* -- Header ----------------------------------------------------------------- */
+/* ---- Page header ---- */
 .pnrx-admin__head {
-  margin-bottom: var(--space-5);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
 }
 
 .pnrx-admin__title {
-  margin: 0 0 var(--space-2);
   font-size: var(--text-2xl);
   font-weight: var(--weight-bold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-1);
   line-height: var(--leading-tight);
-  color: var(--white-soft);
 }
 
 .pnrx-admin__sub {
-  margin: 0;
   font-size: var(--text-sm);
-  color: var(--color-text-secondary);
+  color: var(--color-text-muted);
+  margin: 0;
 }
 
-/* -- Load / error states ---------------------------------------------------- */
+/* ---- Empty / loading state banner ---- */
 .pnrx-admin__state {
-  padding: var(--space-7) var(--space-4);
+  background: var(--grey-100);
+  border: 1px solid var(--grey-150);
+  border-radius: var(--radius-lg);
+  padding: var(--space-7) var(--space-6);
   text-align: center;
+  margin-bottom: var(--space-6);
 }
 
 .pnrx-admin__state-text {
-  margin: 0 0 var(--space-4);
-  font-size: var(--text-lg);
-  color: var(--color-text-secondary);
+  font-size: var(--text-md);
+  color: var(--color-text-muted);
+  margin: 0 0 var(--space-5);
 }
 
-.pnrx-admin__state--error .pnrx-admin__state-text {
-  color: var(--color-text-primary);
-}
-
+/* ---- Teal primary button ---- */
 .pnrx-admin__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
   padding: var(--space-3) var(--space-5);
   font-family: var(--font-sans);
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
-  color: var(--color-text-inverse);
-  background: var(--metal-rail);
-  border: var(--edge-teal);
+  color: var(--grey-000);
+  background: var(--teal-500);
+  border: none;
   border-radius: var(--radius-md);
-  box-shadow: var(--elev-1), var(--glow-teal-soft);
   cursor: pointer;
+  text-decoration: none;
+  transition:
+    background var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
 }
 
-/* -- Stat grid -------------------------------------------------------------- */
+.pnrx-admin__btn:hover {
+  background: var(--teal-400);
+  box-shadow: var(--elev-2);
+  transform: translateY(-1px);
+}
+
+.pnrx-admin__btn:active {
+  background: var(--teal-300);
+  box-shadow: none;
+  transform: translateY(0);
+}
+
+/* ---- Stat grid ---- */
 .pnrx-admin__stats {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-4);
   margin-bottom: var(--space-6);
 }
 
-@media (min-width: 560px) {
-  .pnrx-admin__stats {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-@media (min-width: 900px) {
-  .pnrx-admin__stats {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
+/* ---- Stat card ---- */
 .pnrx-admin__stat {
+  background: var(--color-surface);
+  border: 1px solid var(--grey-150);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--elev-1);
+  padding: var(--space-5);
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
-  padding: var(--space-4);
-  background: var(--color-surface-raised);
-  border: var(--border-hairline);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--elev-2), var(--bevel-raised);
+  gap: var(--space-2);
 }
 
 .pnrx-admin__stat-value {
-  font-size: var(--text-2xl);
+  font-size: var(--text-3xl);
   font-weight: var(--weight-bold);
-  color: var(--color-accent);
-  text-shadow: var(--glow-text-teal);
+  color: var(--teal-500);
+  line-height: 1;
+  margin: 0;
 }
 
 .pnrx-admin__stat-label {
-  font-size: var(--text-xs);
-  color: var(--color-text-muted);
-}
-
-/* -- Sections and tables ---------------------------------------------------- */
-.pnrx-admin__section {
-  margin-bottom: var(--space-5);
-  padding: var(--space-5);
-  background: var(--color-surface);
-  border: var(--border-hairline);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--elev-1), var(--bevel-raised);
-}
-
-.pnrx-admin__section-title {
-  margin: 0 0 var(--space-3);
-  font-size: var(--text-lg);
-  font-weight: var(--weight-medium);
-  color: var(--white-soft);
-}
-
-.pnrx-admin__empty {
-  margin: 0;
   font-size: var(--text-sm);
   color: var(--color-text-muted);
+  margin: 0;
 }
 
+/* ---- White section card ---- */
+.pnrx-admin__card {
+  background: var(--color-surface);
+  border: 1px solid var(--grey-150);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--elev-2);
+  padding: var(--space-5);
+  margin-bottom: var(--space-5);
+  overflow: hidden;
+}
+
+.pnrx-admin__card-title {
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--grey-150);
+}
+
+/* ---- Table scroll wrapper ---- */
+.pnrx-admin__table-wrap {
+  overflow-x: auto;
+  margin: 0 calc(-1 * var(--space-5));
+  padding: 0 var(--space-5);
+}
+
+/* ---- Data table ---- */
 .pnrx-admin__table {
   width: 100%;
   border-collapse: collapse;
   font-size: var(--text-sm);
-}
-
-.pnrx-admin__table th,
-.pnrx-admin__table td {
-  padding: var(--space-2) var(--space-3);
-  text-align: left;
-  border-bottom: 1px solid var(--color-divider);
-}
-
-.pnrx-admin__table th {
-  font-weight: var(--weight-medium);
   color: var(--color-text-secondary);
 }
 
-.pnrx-admin__table td {
-  color: var(--color-text-primary);
+.pnrx-admin__table thead tr {
+  background: var(--grey-100);
+  border-bottom: 2px solid var(--grey-200);
 }
 
-.pnrx-admin__table tr:last-child td {
+.pnrx-admin__table thead th {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  font-weight: var(--weight-medium);
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  white-space: nowrap;
+}
+
+.pnrx-admin__table tbody tr {
+  border-bottom: 1px solid var(--grey-150);
+  transition: background var(--duration-fast) var(--ease-standard);
+}
+
+.pnrx-admin__table tbody tr:last-child {
   border-bottom: none;
 }
 
-.pnrx-admin__num {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
+.pnrx-admin__table tbody tr:hover {
+  background: var(--grey-050);
 }
 
-.pnrx-admin__tag {
+.pnrx-admin__table tbody td {
+  padding: var(--space-3) var(--space-4);
+  vertical-align: middle;
+}
+
+/* ---- Status pill ---- */
+.pnrx-admin__pill {
   display: inline-block;
-  padding: 0 var(--space-2);
+  padding: 2px var(--space-3);
   font-size: var(--text-xs);
   font-weight: var(--weight-medium);
-  color: var(--color-text-inverse);
-  background: var(--color-accent-2);
   border-radius: var(--radius-pill);
+  background: var(--grey-100);
+  color: var(--color-text-muted);
+  border: 1px solid var(--grey-150);
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+}
+
+.pnrx-admin__pill--active {
+  background: hsl(174, 60%, 93%);
+  color: hsl(174, 72%, 28%);
+  border-color: hsl(174, 50%, 80%);
+}
+
+.pnrx-admin__pill--blocked {
+  background: hsl(0, 70%, 95%);
+  color: hsl(0, 60%, 42%);
+  border-color: hsl(0, 55%, 85%);
+}
+
+.pnrx-admin__pill--pending {
+  background: hsl(40, 80%, 94%);
+  color: hsl(34, 72%, 38%);
+  border-color: hsl(40, 60%, 82%);
+}
+
+/* ---- List row (non-table) ---- */
+.pnrx-admin__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--grey-150);
+}
+
+.pnrx-admin__row:last-child {
+  border-bottom: none;
+}
+
+.pnrx-admin__row-primary {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.pnrx-admin__row-secondary {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin: 0;
 }

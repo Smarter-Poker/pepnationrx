@@ -1,66 +1,67 @@
 /* ============================================================================
-   PEPNATIONRX.COM - AUTH COMPONENT STYLES
-   File: frontend/css/components/auth.css
-   ----------------------------------------------------------------------------
-   Styles the <pnrx-auth> Web Component: the sign-in and registration card.
-   Every value references a token from css/variables.css.
+   PEPNATIONRX — AUTH COMPONENT
+   Sign-in / Registration card — clean white card on light grey background.
    ============================================================================ */
 
-pnrx-auth {
-  display: block;
-  font-family: var(--font-sans);
-  color: var(--color-text-primary);
-}
-
+/* ---- Outer page wrapper ---- */
 .pnrx-auth {
+  min-height: 100vh;
   display: flex;
+  align-items: center;
   justify-content: center;
-  padding: var(--space-4) var(--space-2);
+  background: var(--color-bg);
+  padding: var(--space-6) var(--space-4);
+  font-family: var(--font-sans);
 }
 
+/* ---- Centered white card ---- */
 .pnrx-auth__card {
-  width: 100%;
-  max-width: 460px;
-  padding: var(--space-6);
   background: var(--color-surface);
-  border: var(--border-strong);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--elev-4), var(--bevel-raised);
+  box-shadow: var(--elev-2);
+  padding: var(--space-7) var(--space-6);
+  width: 100%;
+  max-width: 480px;
 }
 
+/* ---- Title ---- */
 .pnrx-auth__title {
-  margin: 0 0 var(--space-2);
   font-size: var(--text-2xl);
   font-weight: var(--weight-bold);
+  color: var(--color-text-primary);
+  text-align: center;
+  margin: 0 0 var(--space-2);
   line-height: var(--leading-tight);
-  color: var(--white-soft);
 }
 
+/* ---- Subtitle ---- */
 .pnrx-auth__sub {
-  margin: 0 0 var(--space-5);
   font-size: var(--text-sm);
-  color: var(--color-text-secondary);
-  line-height: var(--leading-base);
+  color: var(--color-text-muted);
+  text-align: center;
+  margin: 0 0 var(--space-6);
 }
 
-/* -- Fields ----------------------------------------------------------------- */
+/* ---- Two-column row on wide viewports ---- */
 .pnrx-auth__row {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-3);
+  gap: var(--space-4);
 }
 
-@media (min-width: 480px) {
+@media (min-width: 520px) {
   .pnrx-auth__row {
     grid-template-columns: 1fr 1fr;
   }
 }
 
+/* ---- Individual field ---- */
 .pnrx-auth__field {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-4);
 }
 
 .pnrx-auth__field label {
@@ -70,135 +71,128 @@ pnrx-auth {
 }
 
 .pnrx-auth__field input {
-  padding: var(--space-3);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
   font-family: var(--font-sans);
   font-size: var(--text-md);
   color: var(--color-text-primary);
-  background: var(--color-surface-recessed);
-  border: var(--border-hairline);
+  background: var(--grey-000);
+  border: 1px solid var(--grey-200);
   border-radius: var(--radius-md);
-  box-shadow: var(--bevel-inset);
-  transition: border-color var(--duration-fast) var(--ease-standard);
+  outline: none;
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
+  box-sizing: border-box;
+}
+
+.pnrx-auth__field input::placeholder {
+  color: var(--grey-300);
 }
 
 .pnrx-auth__field input:focus {
-  outline: none;
-  border-color: var(--color-focus-ring);
-  box-shadow: var(--bevel-inset), var(--glow-teal-soft);
+  border-color: var(--teal-500);
+  box-shadow: 0 0 0 3px hsla(174, 72%, 40%, 0.14);
 }
 
+/* ---- Hint text below a field ---- */
 .pnrx-auth__hint {
-  margin: calc(var(--space-2) * -1) 0 var(--space-4);
   font-size: var(--text-xs);
   color: var(--color-text-muted);
+  margin-top: calc(-1 * var(--space-3));
+  margin-bottom: var(--space-4);
 }
 
-/* -- Registration acknowledgements ------------------------------------------ */
+/* ---- Acknowledgment / consent group ---- */
 .pnrx-auth__acks {
-  margin: var(--space-3) 0 var(--space-4);
-  padding: var(--space-4);
-  background: var(--color-surface-recessed);
-  border: var(--border-hairline);
-  border-radius: var(--radius-md);
+  margin-bottom: var(--space-5);
 }
 
 .pnrx-auth__acks-title {
-  margin: 0 0 var(--space-3);
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
-  color: var(--white-soft);
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--space-3);
 }
 
 .pnrx-auth__ack {
   display: flex;
-  gap: var(--space-3);
   align-items: flex-start;
+  gap: var(--space-3);
   margin-bottom: var(--space-3);
-  font-size: var(--text-sm);
-  line-height: var(--leading-base);
-  color: var(--color-text-secondary);
-  cursor: pointer;
 }
 
-.pnrx-auth__ack:last-child {
-  margin-bottom: 0;
-}
-
-.pnrx-auth__ack input {
-  flex: 0 0 auto;
-  width: 20px;
-  height: 20px;
+.pnrx-auth__ack input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
   margin-top: 2px;
-  accent-color: var(--color-accent);
+  accent-color: var(--teal-500);
   cursor: pointer;
 }
 
-/* -- Error ------------------------------------------------------------------ */
+/* ---- Inline error message ---- */
 .pnrx-auth__error {
-  margin: 0 0 var(--space-4);
-  padding: var(--space-3);
   font-size: var(--text-sm);
-  color: var(--color-text-primary);
-  background: var(--color-surface-recessed);
-  border: var(--edge-blue);
+  color: hsl(0, 72%, 50%);
+  background: hsl(0, 100%, 97%);
+  border: 1px solid hsl(0, 60%, 88%);
   border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
 }
 
-/* -- Call to action --------------------------------------------------------- */
+/* ---- Primary submit button ---- */
 .pnrx-auth__cta {
+  display: block;
   width: 100%;
-  margin-top: var(--space-2);
-  padding: var(--space-4);
+  padding: var(--space-3) var(--space-5);
   font-family: var(--font-sans);
   font-size: var(--text-md);
-  font-weight: var(--weight-bold);
-  letter-spacing: var(--tracking-wide);
-  color: var(--color-text-inverse);
-  background: var(--metal-rail);
-  border: var(--edge-teal);
+  font-weight: var(--weight-medium);
+  color: var(--grey-000);
+  background: var(--teal-500);
+  border: none;
   border-radius: var(--radius-md);
-  box-shadow: var(--elev-2), var(--glow-teal-soft);
   cursor: pointer;
-  transition: box-shadow var(--duration-fast) var(--ease-standard),
+  text-align: center;
+  text-decoration: none;
+  transition:
+    background var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard),
     transform var(--duration-fast) var(--ease-standard);
+  margin-top: var(--space-2);
 }
 
-.pnrx-auth__cta:hover:not(:disabled) {
-  box-shadow: var(--elev-3), var(--glow-teal);
+.pnrx-auth__cta:hover {
+  background: var(--teal-400);
+  box-shadow: var(--elev-2);
   transform: translateY(-1px);
 }
 
-.pnrx-auth__cta:active:not(:disabled) {
+.pnrx-auth__cta:active {
+  background: var(--teal-300);
+  box-shadow: none;
   transform: translateY(0);
-  box-shadow: var(--bevel-inset);
 }
 
-.pnrx-auth__cta:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  box-shadow: var(--elev-1);
-}
-
-/* -- Mode switch ------------------------------------------------------------ */
+/* ---- Switch mode row (e.g. "Already have an account?") ---- */
 .pnrx-auth__switch {
-  margin: var(--space-4) 0 0;
-  font-size: var(--text-sm);
-  color: var(--color-text-secondary);
   text-align: center;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin-top: var(--space-5);
 }
 
 .pnrx-auth__link {
-  padding: 0;
-  font-family: var(--font-sans);
-  font-size: var(--text-sm);
+  color: var(--teal-500);
   font-weight: var(--weight-medium);
-  color: var(--color-accent);
-  background: transparent;
-  border: none;
+  text-decoration: none;
   cursor: pointer;
-  text-decoration: underline;
+  transition: color var(--duration-fast) var(--ease-standard);
 }
 
 .pnrx-auth__link:hover {
-  color: var(--teal-600);
+  color: var(--teal-400);
+  text-decoration: underline;
 }

@@ -1,477 +1,332 @@
 /* ============================================================================
-   PEPNATIONRX.COM - TRIAGE FORM COMPONENT STYLES
-   File: frontend/css/components/triage-form.css
-   ----------------------------------------------------------------------------
-   Styles the <pnrx-triage-form> Web Component. Every value references a token
-   from css/variables.css; no raw colors are introduced here.
+   PEPNATIONRX — TRIAGE FORM COMPONENT
+   Clinical intake form — white panel, teal step progress bar, question cards.
    ============================================================================ */
 
+/* ---- Custom element host ---- */
 pnrx-triage-form {
   display: block;
   width: 100%;
-  max-width: 720px;
-  margin: 0 auto;
-  font-family: var(--font-sans);
-  color: var(--color-text-primary);
 }
 
-/* -- Outer panel: brushed dark metal with a machined bevel ------------------ */
+/* ---- Outer panel (white card) ---- */
 .pnrx-triage {
-  background: var(--metal-surface);
-  border: var(--border-metal);
+  background: var(--color-surface);
+  border: 1px solid var(--grey-150);
   border-radius: var(--radius-xl);
-  box-shadow: var(--elev-4), var(--bevel-raised);
-  padding: var(--space-6);
+  box-shadow: var(--elev-3);
+  padding: var(--space-6) var(--space-6) var(--space-7);
+  max-width: 680px;
+  margin: var(--space-7) auto;
+  font-family: var(--font-sans);
 }
 
-/* -- Header ----------------------------------------------------------------- */
+/* ---- Form header ---- */
 .pnrx-triage__head {
   margin-bottom: var(--space-5);
 }
 
 .pnrx-triage__title {
-  margin: 0 0 var(--space-2);
   font-size: var(--text-2xl);
   font-weight: var(--weight-bold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-2);
   line-height: var(--leading-tight);
-  color: var(--white-soft);
 }
 
 .pnrx-triage__subhead {
-  margin: var(--space-5) 0 var(--space-3);
-  font-size: var(--text-lg);
+  font-size: var(--text-md);
   font-weight: var(--weight-medium);
-  color: var(--white-soft);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-1);
 }
 
 .pnrx-triage__sub {
-  margin: 0;
   font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin: 0;
   line-height: var(--leading-base);
-  color: var(--color-text-secondary);
 }
 
-/* -- Progress bar ----------------------------------------------------------- */
+/* ---- Step progress bar ---- */
 .pnrx-triage__progress {
+  width: 100%;
   height: 6px;
-  background: var(--color-surface-recessed);
+  background: var(--grey-150);
   border-radius: var(--radius-pill);
-  box-shadow: var(--bevel-inset);
   overflow: hidden;
+  margin-bottom: var(--space-6);
 }
 
 .pnrx-triage__progress-fill {
-  display: block;
   height: 100%;
-  background: linear-gradient(90deg, var(--teal-400), var(--teal-500));
-  box-shadow: var(--glow-teal-soft);
+  background: var(--teal-500);
+  border-radius: var(--radius-pill);
   transition: width var(--duration-base) var(--ease-standard);
 }
 
+/* ---- Step wrapper ---- */
 .pnrx-triage__step {
-  margin: var(--space-2) 0 0;
-  font-size: var(--text-xs);
-  font-weight: var(--weight-medium);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  color: var(--color-text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
 }
 
-/* -- Protocol selection grid ------------------------------------------------ */
+/* ---- Protocol selection card grid ---- */
 .pnrx-triage__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-4);
 }
 
+/* ---- Protocol card ---- */
 .pnrx-triage__card {
+  background: var(--grey-100);
+  border: 1.5px solid var(--grey-150);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  cursor: pointer;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  text-align: left;
-  padding: var(--space-4);
-  background: var(--metal-dark-panel);
-  border: var(--border-hairline);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--elev-1), var(--bevel-raised);
-  cursor: pointer;
-  transition: transform var(--duration-fast) var(--ease-standard),
+  transition:
     border-color var(--duration-fast) var(--ease-standard),
+    background var(--duration-fast) var(--ease-standard),
     box-shadow var(--duration-fast) var(--ease-standard);
 }
 
 .pnrx-triage__card:hover {
-  transform: translateY(-2px);
-  border-color: var(--color-accent);
-  box-shadow: var(--elev-3), var(--glow-teal-soft);
+  border-color: var(--teal-500);
+  box-shadow: var(--elev-2);
 }
 
-.pnrx-triage__card:focus-visible {
-  outline: 2px solid var(--color-focus-ring);
-  outline-offset: 2px;
+/* ---- Selected protocol card ---- */
+.pnrx-triage__card--selected {
+  border-color: var(--teal-500);
+  background: hsl(174, 60%, 96%);
+  box-shadow: 0 0 0 2px hsla(174, 72%, 40%, 0.18);
 }
 
-.pnrx-triage__card-title {
-  font-size: var(--text-lg);
+/* ---- Card icon ---- */
+.pnrx-triage__card-icon {
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+/* ---- Card name ---- */
+.pnrx-triage__card-name {
+  font-size: var(--text-sm);
   font-weight: var(--weight-bold);
-  color: var(--white-soft);
+  color: var(--color-text-primary);
+  margin: 0;
 }
 
-.pnrx-triage__card-blurb {
-  font-size: var(--text-sm);
-  line-height: var(--leading-base);
-  color: var(--color-text-secondary);
-}
-
-/* -- Question --------------------------------------------------------------- */
-.pnrx-triage__question {
-  margin-bottom: var(--space-5);
-}
-
-.pnrx-triage__prompt {
-  margin: 0 0 var(--space-2);
-  font-size: var(--text-xl);
-  font-weight: var(--weight-medium);
-  line-height: var(--leading-tight);
-  color: var(--white-soft);
-}
-
-.pnrx-triage__optional {
-  display: inline-block;
-  margin-left: var(--space-2);
-  padding: 2px var(--space-2);
+/* ---- Card description ---- */
+.pnrx-triage__card-desc {
   font-size: var(--text-xs);
-  font-weight: var(--weight-medium);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
   color: var(--color-text-muted);
-  border: var(--border-hairline);
-  border-radius: var(--radius-pill);
-  vertical-align: middle;
-}
-
-.pnrx-triage__help {
-  margin: 0 0 var(--space-4);
-  font-size: var(--text-sm);
+  margin: 0;
   line-height: var(--leading-base);
-  color: var(--color-text-secondary);
 }
 
-/* -- Options ---------------------------------------------------------------- */
+/* ---- Question block ---- */
+.pnrx-triage__question {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.pnrx-triage__question-text {
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-primary);
+  margin: 0;
+  line-height: var(--leading-base);
+}
+
+/* ---- Options list ---- */
 .pnrx-triage__options {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
-.pnrx-triage__options--row {
-  flex-direction: row;
-}
-
-.pnrx-triage__options--row .pnrx-triage__option {
-  flex: 1;
-  text-align: center;
-}
-
+/* ---- Individual option label ---- */
 .pnrx-triage__option {
-  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
-  font-family: var(--font-sans);
-  font-size: var(--text-md);
-  text-align: left;
-  color: var(--color-text-primary);
-  background: var(--color-surface-raised);
-  border: var(--border-hairline);
+  background: var(--grey-100);
+  border: 1.5px solid var(--grey-150);
   border-radius: var(--radius-md);
-  box-shadow: var(--elev-1);
   cursor: pointer;
-  transition: border-color var(--duration-fast) var(--ease-standard),
-    box-shadow var(--duration-fast) var(--ease-standard),
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
     background var(--duration-fast) var(--ease-standard);
 }
 
 .pnrx-triage__option:hover {
-  border-color: var(--color-border-strong);
+  border-color: var(--grey-200);
+  background: var(--grey-000);
 }
 
-.pnrx-triage__option:focus-visible {
-  outline: 2px solid var(--color-focus-ring);
-  outline-offset: 2px;
+.pnrx-triage__option input[type="radio"],
+.pnrx-triage__option input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  accent-color: var(--teal-500);
+  cursor: pointer;
 }
 
-.pnrx-triage__option.is-selected {
-  border: var(--edge-teal);
-  background: var(--color-surface-elevated);
-  box-shadow: var(--elev-2), var(--glow-teal-soft);
+.pnrx-triage__option-text {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
 }
 
-.pnrx-triage__option.is-selected::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  right: var(--space-4);
-  width: 10px;
-  height: 10px;
-  margin-top: -5px;
-  background: var(--teal-500);
-  border-radius: var(--radius-pill);
-  box-shadow: var(--glow-teal);
+/* ---- Selected option ---- */
+.pnrx-triage__option--selected {
+  border-color: var(--teal-500);
+  background: hsl(174, 60%, 96%);
 }
 
-/* -- Free-text and number fields ------------------------------------------- */
+.pnrx-triage__option--selected .pnrx-triage__option-text {
+  color: var(--color-text-primary);
+  font-weight: var(--weight-medium);
+}
+
+/* ---- Text / textarea field ---- */
 .pnrx-triage__field {
   display: flex;
-  align-items: center;
-  gap: var(--space-3);
+  flex-direction: column;
+  gap: var(--space-1);
 }
 
-.pnrx-triage__number,
-.pnrx-triage__text {
+.pnrx-triage__field input,
+.pnrx-triage__field textarea {
   width: 100%;
   padding: var(--space-3) var(--space-4);
   font-family: var(--font-sans);
   font-size: var(--text-md);
   color: var(--color-text-primary);
-  background: var(--color-surface-recessed);
-  border: var(--border-hairline);
+  background: var(--grey-000);
+  border: 1px solid var(--grey-200);
   border-radius: var(--radius-md);
-  box-shadow: var(--bevel-inset);
-}
-
-.pnrx-triage__number {
-  max-width: 180px;
-}
-
-.pnrx-triage__text {
-  resize: vertical;
-  line-height: var(--leading-base);
-}
-
-.pnrx-triage__number:focus,
-.pnrx-triage__text:focus {
   outline: none;
-  border: var(--edge-teal);
-  box-shadow: var(--bevel-inset), var(--glow-teal-soft);
+  resize: vertical;
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
+  box-sizing: border-box;
 }
 
-.pnrx-triage__unit {
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  color: var(--color-text-muted);
+.pnrx-triage__field input::placeholder,
+.pnrx-triage__field textarea::placeholder {
+  color: var(--grey-300);
 }
 
-/* -- Inline field validation ----------------------------------------------- */
-.pnrx-triage__error {
-  margin: var(--space-2) 0 0;
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  line-height: var(--leading-base);
-  color: var(--color-alert);
+.pnrx-triage__field input:focus,
+.pnrx-triage__field textarea:focus {
+  border-color: var(--teal-500);
+  box-shadow: 0 0 0 3px hsla(174, 72%, 40%, 0.14);
 }
 
-/* When there is no message the element is left empty; keep it out of flow. */
-.pnrx-triage__error:empty {
-  display: none;
-}
-
-/* -- Footer actions --------------------------------------------------------- */
-.pnrx-triage__foot {
+/* ---- Navigation row ---- */
+.pnrx-triage__nav {
   display: flex;
-  justify-content: space-between;
-  gap: var(--space-3);
-  margin-top: var(--space-5);
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--color-divider);
-}
-
-.pnrx-triage__btn {
-  padding: var(--space-3) var(--space-6);
-  font-family: var(--font-sans);
-  font-size: var(--text-md);
-  font-weight: var(--weight-medium);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: transform var(--duration-fast) var(--ease-standard),
-    box-shadow var(--duration-fast) var(--ease-standard),
-    opacity var(--duration-fast) var(--ease-standard);
-}
-
-.pnrx-triage__btn:focus-visible {
-  outline: 2px solid var(--color-focus-ring);
-  outline-offset: 2px;
-}
-
-.pnrx-triage__btn--primary {
-  color: var(--color-text-inverse);
-  background: linear-gradient(180deg, var(--teal-500), var(--teal-400));
-  border: var(--edge-teal);
-  box-shadow: var(--elev-2), var(--glow-teal-soft);
-}
-
-.pnrx-triage__btn--primary:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--elev-3), var(--glow-teal);
-}
-
-.pnrx-triage__btn--primary:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: var(--elev-1);
-}
-
-.pnrx-triage__btn--ghost {
-  color: var(--color-text-secondary);
-  background: var(--color-surface-raised);
-  border: var(--border-hairline);
-  box-shadow: var(--elev-1);
-}
-
-.pnrx-triage__btn--ghost:hover {
-  color: var(--white-soft);
-  border-color: var(--color-border-strong);
-}
-
-/* -- Review screen ---------------------------------------------------------- */
-.pnrx-triage__review {
-  display: flex;
-  flex-direction: column;
-  border: var(--border-hairline);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-}
-
-.pnrx-triage__review-row {
-  display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
-  padding: var(--space-3) var(--space-4);
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-divider);
+  margin-top: var(--space-5);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--grey-150);
 }
 
-.pnrx-triage__review-row:last-child {
-  border-bottom: none;
-}
-
-.pnrx-triage__review-q {
-  flex: 1;
-  font-size: var(--text-sm);
-  color: var(--color-text-secondary);
-}
-
-.pnrx-triage__review-a {
-  flex: 0 0 40%;
+/* ---- Back ghost button ---- */
+.pnrx-triage__back {
+  padding: var(--space-3) var(--space-5);
+  font-family: var(--font-sans);
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
-  text-align: right;
-  color: var(--white-soft);
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: 1px solid var(--grey-200);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition:
+    background var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
 }
 
-/* -- Risk card -------------------------------------------------------------- */
-.pnrx-triage__riskcard {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  margin-bottom: var(--space-4);
-  padding: var(--space-4);
+.pnrx-triage__back:hover {
+  background: var(--grey-100);
+  border-color: var(--grey-300);
+  color: var(--color-text-primary);
+}
+
+.pnrx-triage__back:active {
+  background: var(--grey-150);
+}
+
+/* ---- Next teal button ---- */
+.pnrx-triage__next {
+  padding: var(--space-3) var(--space-6);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--grey-000);
+  background: var(--teal-500);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition:
+    background var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
+}
+
+.pnrx-triage__next:hover {
+  background: var(--teal-400);
+  box-shadow: var(--elev-2);
+  transform: translateY(-1px);
+}
+
+.pnrx-triage__next:active {
+  background: var(--teal-300);
+  box-shadow: none;
+  transform: translateY(0);
+}
+
+.pnrx-triage__next:disabled {
+  background: var(--grey-300);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ---- Disqualified state ---- */
+.pnrx-triage__disqualified {
+  background: hsl(0, 100%, 97%);
+  border: 1.5px solid hsl(0, 60%, 88%);
   border-radius: var(--radius-lg);
-  border: var(--border-hairline);
-  background: var(--metal-dark-panel);
-}
-
-.pnrx-triage__risk-label {
-  font-size: var(--text-xs);
-  font-weight: var(--weight-medium);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  color: var(--color-text-muted);
-}
-
-.pnrx-triage__risk-value {
-  font-size: var(--text-xl);
-  font-weight: var(--weight-bold);
-  color: var(--white-soft);
-}
-
-.pnrx-triage__riskcard--low {
-  border-color: var(--teal-400);
-  box-shadow: var(--glow-teal-soft);
-}
-
-.pnrx-triage__riskcard--moderate {
-  border-color: var(--blue-400);
-  box-shadow: var(--glow-blue-soft);
-}
-
-.pnrx-triage__riskcard--high {
-  border: var(--edge-blue);
-  box-shadow: var(--glow-blue);
-}
-
-.pnrx-triage__riskcard--disqualified {
-  border-color: var(--silver-200);
-}
-
-/* -- Flag list -------------------------------------------------------------- */
-.pnrx-triage__flags {
-  margin: 0;
-  padding-left: var(--space-5);
-  font-size: var(--text-sm);
-  line-height: var(--leading-base);
-  color: var(--color-text-secondary);
-}
-
-/* -- End screens ------------------------------------------------------------ */
-.pnrx-triage__end {
+  padding: var(--space-6);
   text-align: center;
-  padding: var(--space-6) var(--space-3);
+  color: hsl(0, 50%, 40%);
+  font-size: var(--text-md);
 }
 
-.pnrx-triage__end .pnrx-triage__sub {
-  max-width: 480px;
-  margin: 0 auto var(--space-4);
-}
-
-.pnrx-triage__end--done .pnrx-triage__title {
-  color: var(--teal-500);
-  text-shadow: var(--glow-text-teal);
-}
-
-.pnrx-triage__end--stop .pnrx-triage__title {
-  color: var(--blue-500);
-  text-shadow: var(--glow-text-blue);
-}
-
-.pnrx-triage__end .pnrx-triage__btn {
-  margin-top: var(--space-2);
-}
-
-/* -- Legal footnote --------------------------------------------------------- */
-.pnrx-triage__legal {
-  margin: var(--space-5) 0 0;
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--color-divider);
-  font-size: var(--text-xs);
-  line-height: var(--leading-base);
-  color: var(--color-text-muted);
-}
-
-/* -- Responsive ------------------------------------------------------------- */
-@media (max-width: 540px) {
-  .pnrx-triage {
-    padding: var(--space-4);
-  }
-
-  .pnrx-triage__review-row {
-    flex-direction: column;
-    gap: var(--space-1);
-  }
-
-  .pnrx-triage__review-a {
-    flex-basis: auto;
-    text-align: left;
-  }
+/* ---- Success state ---- */
+.pnrx-triage__success {
+  background: hsl(174, 60%, 96%);
+  border: 1.5px solid hsl(174, 50%, 78%);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  text-align: center;
+  color: hsl(174, 72%, 28%);
+  font-size: var(--text-md);
 }
