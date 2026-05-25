@@ -316,9 +316,8 @@ export class PnrxAuth extends PnrxComponent {
     this.$$('[data-ack]').forEach(function (box) {
       box.addEventListener('change', function () {
         const index = Number(box.getAttribute('data-ack'));
-        const acks = self.state.acks.slice();
-        acks[index] = box.checked;
-        self.setState({ acks: acks });
+        self.state.acks[index] = box.checked;
+        self.refreshSubmitButton();
       });
     });
 
@@ -332,7 +331,8 @@ export class PnrxAuth extends PnrxComponent {
     var stateSelect = this.$('#pnrx-state');
     if (stateSelect && stateSelect.tagName === 'SELECT') {
       stateSelect.addEventListener('change', function () {
-        self.setState({ usState: stateSelect.value });
+        self.state.usState = stateSelect.value;
+        self.refreshSubmitButton();
       });
     }
 

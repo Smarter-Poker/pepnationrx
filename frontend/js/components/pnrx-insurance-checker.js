@@ -80,6 +80,7 @@ export class PnrxInsuranceChecker extends PnrxComponent {
     } catch (err) {
       this.setState({
         status: 'error',
+        busy: false,
         error:
           err && err.message
             ? err.message

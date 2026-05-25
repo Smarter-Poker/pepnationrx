@@ -703,9 +703,38 @@ export class PnrxTriageForm extends PnrxComponent {
         if (!question) return;
         const optionValue = button.getAttribute('data-option');
         if (question.type === 'multi') {
-          self.toggleMulti(question.id, optionValue);
+          const current = (self.state.answers[question.id] || []).slice();
+          let next;
+          if (optionValue === 'none') {
+            next = current.indexOf('none') !== -1 ? [] : ['none'];
+          } else {
+            next = current.filter(function (v) {
+              return v !== 'none';
+            });
+            const index = next.indexOf(optionValue);
+            if (index === -1) {
+              next.push(optionValue);
+            } else {
+              next.splice(index, 1);
+            }
+          }
+          self.setAnswerQuiet(question.id, next);
+          self.$$('[data-option]').forEach(function (btn) {
+            const val = btn.getAttribute('data-option');
+            if (next.indexOf(val) !== -1) {
+              btn.classList.add('is-selected');
+            } else {
+              btn.classList.remove('is-selected');
+            }
+          });
+          self.refreshContinueState();
         } else {
-          self.setAnswer(question.id, optionValue);
+          self.setAnswerQuiet(question.id, optionValue);
+          self.$$('[data-option]').forEach(function (btn) {
+            btn.classList.remove('is-selected');
+          });
+          button.classList.add('is-selected');
+          self.refreshContinueState();
         }
       });
     });
@@ -713,7 +742,13 @@ export class PnrxTriageForm extends PnrxComponent {
     this.$$('[data-bool]').forEach(function (button) {
       button.addEventListener('click', function () {
         if (!question) return;
-        self.setAnswer(question.id, button.getAttribute('data-bool') === 'yes');
+        const val = button.getAttribute('data-bool') === 'yes';
+        self.setAnswerQuiet(question.id, val);
+        self.$$('[data-bool]').forEach(function (btn) {
+          btn.classList.remove('is-selected');
+        });
+        button.classList.add('is-selected');
+        self.refreshContinueState();
       });
     });
 

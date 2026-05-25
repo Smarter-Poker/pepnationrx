@@ -313,7 +313,7 @@ export class PnrxAppShell extends HTMLElement {
         if (self.pendingSelection) {
           self.pendingSelection._pendingIntakeDetail = detail;
         }
-        proceed();
+        self.router.navigate('/register');
         return;
       }
       submitIntake(detail)

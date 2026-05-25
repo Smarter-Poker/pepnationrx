@@ -201,6 +201,18 @@ export class PnrxCheckout extends PnrxComponent {
     );
   }
 
+  // Update only the submit button's disabled state — no re-render needed.
+  refreshSubmitButton() {
+    const btn = this.$('[data-action="submit"]');
+    if (btn) {
+      if (this.canSubmit()) {
+        btn.removeAttribute('disabled');
+      } else {
+        btn.setAttribute('disabled', '');
+      }
+    }
+  }
+
   // -- Submission ------------------------------------------------------------
 
   async submit() {
@@ -470,9 +482,8 @@ export class PnrxCheckout extends PnrxComponent {
           (s.addrState === st.value ? ' selected' : '') + '>' +
           st.label + '</option>';
       }).join('');
-    const zipError = s.postalCode.trim() !== '' && !ZIP_RE.test(s.postalCode.trim())
-      ? '<p class="pnrx-checkout__field-error">Please Enter A Valid 5-Digit ZIP Code.</p>'
-      : '';
+    const hasZipError = s.postalCode.trim() !== '' && !ZIP_RE.test(s.postalCode.trim());
+    const zipError = '<p class="pnrx-checkout__field-error" id="pnrx-zip-error" style="display: ' + (hasZipError ? 'block' : 'none') + '">Please Enter A Valid 5-Digit ZIP Code.</p>';
     return (
       '<section class="pnrx-checkout__section">' +
       '<h3 class="pnrx-checkout__subhead">Shipping Address</h3>' +
@@ -575,13 +586,12 @@ export class PnrxCheckout extends PnrxComponent {
         // Direct mutation: safe here because we are immediately syncing
         // the DOM value back to state without triggering a render cycle.
         self.state[input.getAttribute('data-field')] = input.value;
-        // Refresh the submit button enabled state without a full re-render.
-        var btn = self.$('[data-action="submit"]');
-        if (btn) {
-          if (self.canSubmit()) {
-            btn.removeAttribute('disabled');
-          } else {
-            btn.setAttribute('disabled', '');
+        self.refreshSubmitButton();
+        if (input.id === 'pnrx-zip') {
+          const val = input.value.trim();
+          const errorEl = self.$('#pnrx-zip-error');
+          if (errorEl && (val === '' || ZIP_RE.test(val))) {
+            errorEl.style.display = 'none';
           }
         }
       });
@@ -592,21 +602,40 @@ export class PnrxCheckout extends PnrxComponent {
     const stateSelect = this.$('[data-select="addrState"]');
     if (stateSelect) {
       stateSelect.addEventListener('change', function () {
-        self.setState({ addrState: stateSelect.value });
+        self.state.addrState = stateSelect.value;
+        self.refreshSubmitButton();
       });
     }
 
     const mso = this.$('[data-consent="mso"]');
     if (mso) {
       mso.addEventListener('change', function () {
-        self.setState({ consentMso: mso.checked });
+        self.state.consentMso = mso.checked;
+        self.refreshSubmitButton();
       });
     }
 
     const telehealth = this.$('[data-consent="telehealth"]');
     if (telehealth) {
       telehealth.addEventListener('change', function () {
-        self.setState({ consentTelehealth: telehealth.checked });
+        self.state.consentTelehealth = telehealth.checked;
+        self.refreshSubmitButton();
+      });
+    }
+
+    // Trigger error message on ZIP code blur quietly without full re-render.
+    const zipInput = this.$('#pnrx-zip');
+    if (zipInput) {
+      zipInput.addEventListener('blur', function () {
+        const val = zipInput.value.trim();
+        const errorEl = self.$('#pnrx-zip-error');
+        if (errorEl) {
+          if (val !== '' && !ZIP_RE.test(val)) {
+            errorEl.style.display = 'block';
+          } else {
+            errorEl.style.display = 'none';
+          }
+        }
       });
     }
 
