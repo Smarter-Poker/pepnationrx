@@ -120,20 +120,31 @@ async function send(data) {
       return { ok: false, reason: 'no_recipient' };
     }
 
-    const result = await emailAdapter.send({
-      to: to,
-      subject: rendered.subject,
-      text: rendered.text,
-    });
+    let result;
+    try {
+      result = await emailAdapter.send({
+        to: to,
+        subject: rendered.subject,
+        text: rendered.text,
+      });
+    } catch (sendErr) {
+      await notificationModel.markFailed(row.id, sendErr.message);
+      logger.error('Notification dispatch failed', {
+        template: data.template,
+        message: sendErr.message,
+      });
+      return { ok: false, reason: 'send_error', error: sendErr.message };
+    }
+
     await notificationModel.markSent(row.id);
     return { ok: true, notificationId: row.id, simulated: result.simulated === true };
   } catch (err) {
-    // A dispatch failure is logged and recorded but never thrown onward.
-    logger.error('Notification send failed', {
+    // A database or other unexpected system failure is logged but never thrown onward.
+    logger.error('Notification system failure', {
       template: data && data.template,
       message: err.message,
     });
-    return { ok: false, reason: 'send_error', error: err.message };
+    return { ok: false, reason: 'system_error', error: err.message };
   }
 }
 
