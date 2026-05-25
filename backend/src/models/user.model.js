@@ -71,11 +71,22 @@ async function emailExists(email) {
   return row !== null;
 }
 
+// Look up multiple users by their ids, returning public columns only.
+async function findManyByIds(ids) {
+  if (!ids || ids.length === 0) return [];
+  const result = await query(
+    'SELECT ' + PUBLIC_COLUMNS + ' FROM users WHERE id = ANY($1)',
+    [ids]
+  );
+  return result.rows;
+}
+
 module.exports = {
   PUBLIC_COLUMNS: PUBLIC_COLUMNS,
   findById: findById,
   findByEmail: findByEmail,
   findByEmailWithSecret: findByEmailWithSecret,
+  findManyByIds: findManyByIds,
   create: create,
   touchLastLogin: touchLastLogin,
   emailExists: emailExists,

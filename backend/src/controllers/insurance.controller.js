@@ -267,10 +267,29 @@ async function requestConcierge(req, res, next) {
 async function listConciergeQueue(req, res, next) {
   try {
     const rows = await insuranceModel.findConciergeQueue();
+
+    // Collect unique patient user IDs to avoid duplicate queries
+    const userIds = [];
+    for (let i = 0; i < rows.length; i += 1) {
+      const id = rows[i].user_id;
+      if (userIds.indexOf(id) === -1) {
+        userIds.push(id);
+      }
+    }
+
+    // Fetch all patient profiles in a single batch query
+    const users = await userModel.findManyByIds(userIds);
+
+    // Map profiles for O(1) in-memory lookup
+    const userMap = {};
+    for (let i = 0; i < users.length; i += 1) {
+      userMap[users[i].id] = users[i];
+    }
+
     const items = [];
     for (let i = 0; i < rows.length; i += 1) {
       const row = rows[i];
-      const patient = await userModel.findById(row.user_id);
+      const patient = userMap[row.user_id] || null;
       items.push({
         check: presentCheck(row),
         patient: patient
