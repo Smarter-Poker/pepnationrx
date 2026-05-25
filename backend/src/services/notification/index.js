@@ -3,10 +3,14 @@
 // ============================================================================
 // Notification service - orchestrates patient notifications.
 // ----------------------------------------------------------------------------
-// send() is the single entry point. It renders a template, checks the user's
-// channel preferences, records a durable notifications row (idempotent via
-// dedupeKey), dispatches through the channel adapter, and marks the row sent,
-// failed, or skipped.
+// send() is the single entry point. It resolves the recipient, renders a
+// template, checks the user's channel preferences, records a durable
+// notifications row (idempotent via dedupeKey), dispatches through the channel
+// adapter, and marks the row sent, failed, or skipped.
+//
+// The recipient's first name is resolved once and merged into the template
+// payload, so every template's greeting is personalized without each caller
+// having to pass it.
 //
 // Like the audit service, send() never throws into its caller: a notification
 // failure must not roll back the clinical or billing action that triggered it.
@@ -19,12 +23,19 @@ const notificationModel = require('../../models/notification.model');
 const templates = require('./templates');
 const emailAdapter = require('./email-adapter');
 
-// Resolve the recipient email: trust an explicitly supplied address, otherwise
-// look it up from the users table. Returns null when neither is available.
-async function resolveEmail(userId, suppliedEmail) {
-  if (suppliedEmail) return suppliedEmail;
-  const row = await queryOne('SELECT email FROM users WHERE id = $1', [userId]);
-  return row ? row.email : null;
+// Resolve the recipient from the users table: their email address and first
+// name. Returns null fields when the user row does not exist; the caller may
+// still supply an explicit email, and templates fall back to a generic
+// greeting when the first name is absent.
+async function resolveRecipient(userId) {
+  const row = await queryOne(
+    'SELECT email, first_name FROM users WHERE id = $1',
+    [userId]
+  );
+  return {
+    email: row ? row.email : null,
+    firstName: row && row.first_name ? row.first_name : '',
+  };
 }
 
 // Whether the user's preferences permit the channel.
@@ -55,7 +66,16 @@ async function send(data) {
       return { ok: false, reason: 'unknown_template' };
     }
 
-    const rendered = templates.render(data.template, data.payload || {});
+    // Resolve the recipient once. The first name enriches the payload so every
+    // template greeting is personalized; an explicit caller-supplied firstName
+    // is left untouched.
+    const recipient = await resolveRecipient(data.userId);
+    const payload = Object.assign({}, data.payload || {});
+    if (!payload.firstName && recipient.firstName) {
+      payload.firstName = recipient.firstName;
+    }
+
+    const rendered = templates.render(data.template, payload);
 
     // Honor the user's channel preference. A skipped notification is still
     // recorded so the timeline shows the platform chose not to send.
@@ -66,7 +86,7 @@ async function send(data) {
         channel: channel,
         template: data.template,
         subject: rendered.subject,
-        payload: data.payload || {},
+        payload: payload,
         dedupeKey: data.dedupeKey || null,
       });
       if (skippedRow) await notificationModel.markSkipped(skippedRow.id);
@@ -80,7 +100,7 @@ async function send(data) {
       channel: channel,
       template: data.template,
       subject: rendered.subject,
-      payload: data.payload || {},
+      payload: payload,
       dedupeKey: data.dedupeKey || null,
     });
     if (!row) {
@@ -93,7 +113,8 @@ async function send(data) {
       return { ok: true, skipped: true, reason: 'sms_not_enabled' };
     }
 
-    const to = await resolveEmail(data.userId, data.email);
+    // An explicitly supplied address wins; otherwise use the resolved email.
+    const to = data.email || recipient.email;
     if (!to) {
       await notificationModel.markFailed(row.id, 'no recipient email');
       return { ok: false, reason: 'no_recipient' };

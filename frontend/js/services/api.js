@@ -32,12 +32,9 @@ export function configureApi(options) {
 }
 
 // Set or clear the bearer access token used for authenticated requests.
+// Called by session.js — session.js is the source of truth for the token.
 export function setAccessToken(token) {
   accessToken = token || null;
-}
-
-export function getAccessToken() {
-  return accessToken;
 }
 
 // Issue a JSON request. Resolves with the parsed body, or rejects with an
@@ -96,6 +93,9 @@ export const api = {
   },
   put: function (path, body) {
     return request('PUT', path, body);
+  },
+  patch: function (path, body) {
+    return request('PATCH', path, body);
   },
   del: function (path) {
     return request('DELETE', path);

@@ -31,10 +31,18 @@ export function placeCheckout(order) {
   };
   if (order.intakeSubmissionId) body.intakeSubmissionId = order.intakeSubmissionId;
   if (order.affiliateCode) body.affiliateCode = order.affiliateCode;
+  if (order.couponCode) body.couponCode = order.couponCode;
   if (order.shippingAddressId) {
     body.shippingAddressId = order.shippingAddressId;
   } else if (order.shippingAddress) {
     body.shippingAddress = order.shippingAddress;
   }
   return api.post('/api/checkout', body);
+}
+
+// Validate a coupon code before checkout. Resolves with the { coupon } envelope
+// when the code is usable by the signed-in patient; rejects with an ApiError
+// whose message explains why the code cannot be used.
+export function validateCoupon(code) {
+  return api.post('/api/coupons/validate', { code: code });
 }

@@ -295,6 +295,51 @@ pnrx-affiliate-dashboard {
   color: var(--canvas-400);
 }
 
+/* Subscription rows carry inline self-service controls. The main column grows
+   so the status pill and the action buttons cluster together at the right. */
+.pnrx-dash__row--sub .pnrx-dash__row-main {
+  flex: 1 1 auto;
+}
+
+.pnrx-dash__row-actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+/* Compact button variant for inline row actions. */
+.pnrx-dash__btn--sm {
+  padding: 6px var(--space-3);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+}
+
+/* Destructive variant: a bordered ghost button so a cancel never looks like
+   the default action. */
+.pnrx-dash__btn--danger {
+  color: var(--rose-600, #be123c);
+  background: transparent;
+  border: 1.5px solid var(--rose-300, #fda4af);
+}
+
+.pnrx-dash__btn--danger:hover {
+  background: var(--rose-50, #fff1f2);
+  box-shadow: none;
+  transform: translateY(-1px);
+}
+
+.pnrx-dash__btn--danger:active {
+  background: var(--rose-100, #ffe4e6);
+  transform: translateY(0);
+}
+
+.pnrx-dash__btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 .pnrx-dash__empty {
   font-size: var(--text-sm);
   color: var(--canvas-400);

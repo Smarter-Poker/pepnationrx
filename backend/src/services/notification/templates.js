@@ -96,6 +96,23 @@ const TEMPLATES = {
       );
     },
   },
+
+  new_message: {
+    subject: function () {
+      return 'You Have A New Message From Your Care Team';
+    },
+    text: function (p) {
+      return (
+        'Hello ' + v(p, 'firstName', 'there') + ',\n\n' +
+        'You have a new message from ' +
+        v(p, 'senderName', 'your care team') + '. Sign in to your ' +
+        'PepNationRX dashboard to read it and reply.\n\n' +
+        'For your security, the message itself is not included in this ' +
+        'email.\n\n' +
+        'PepNationRX'
+      );
+    },
+  },
 };
 
 // Render a template to { subject, text }. Returns null for an unknown key so

@@ -98,10 +98,10 @@ async function request(req, res, next) {
     }
 
     // Compute the affiliate's earned balance from active MRR in this period.
-    // The commission rate is stored on the affiliate record.
+    // revenue_share_pct is stored as a percentage (e.g. 20.0 = 20%).
     const activeMrr = await subscriptionModel.activeMrrCentsForAffiliate(affiliate.id);
-    const commissionRate = Number(affiliate.commission_rate) || 0.20;
-    const amountCents = Math.floor(activeMrr * commissionRate);
+    const sharePct = Number(affiliate.revenue_share_pct) || 0;
+    const amountCents = Math.floor(activeMrr * sharePct / 100);
 
     if (amountCents <= 0) {
       throw errors.badRequest('No Affiliate Revenue Balance Available For This Period.');

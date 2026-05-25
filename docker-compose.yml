@@ -26,6 +26,15 @@ services:
       - ./database/migrations/0004_user_state.sql:/docker-entrypoint-initdb.d/04-user-state.sql:ro
       - ./database/migrations/0005_checkin_unique_open.sql:/docker-entrypoint-initdb.d/05-checkin-unique-open.sql:ro
       - ./database/migrations/0006_prescription_one_per_intake.sql:/docker-entrypoint-initdb.d/06-prescription-one-per-intake.sql:ro
+      - ./database/migrations/0007_subscription_plan_and_intake_links.sql:/docker-entrypoint-initdb.d/07-subscription-plan-and-intake-links.sql:ro
+      - ./database/migrations/0008_signature_protocols.sql:/docker-entrypoint-initdb.d/08-signature-protocols.sql:ro
+      - ./database/migrations/0009_catalog_compliance_and_additions.sql:/docker-entrypoint-initdb.d/09-catalog-compliance-and-additions.sql:ro
+      - ./database/migrations/0010_notifications.sql:/docker-entrypoint-initdb.d/10-notifications.sql:ro
+      - ./database/migrations/0011_subscription_events.sql:/docker-entrypoint-initdb.d/11-subscription-events.sql:ro
+      - ./database/migrations/0012_messaging.sql:/docker-entrypoint-initdb.d/12-messaging.sql:ro
+      - ./database/migrations/0013_insurance.sql:/docker-entrypoint-initdb.d/13-insurance.sql:ro
+      - ./database/migrations/0014_membership.sql:/docker-entrypoint-initdb.d/14-membership.sql:ro
+      - ./database/migrations/0015_coupons.sql:/docker-entrypoint-initdb.d/15-coupons.sql:ro
     ports:
       - "5432:5432"
     healthcheck:

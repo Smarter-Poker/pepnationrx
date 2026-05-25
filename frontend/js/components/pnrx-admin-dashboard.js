@@ -13,8 +13,27 @@
 'use strict';
 
 import { PnrxComponent, escapeHtml } from '../core/component.js';
-import { fetchAdminDashboard, fetchAuditLog } from '../services/admin.service.js';
+import {
+  fetchAdminDashboard,
+  fetchAuditLog,
+  fetchCoupons,
+  createCoupon,
+  updateCoupon,
+} from '../services/admin.service.js';
 import { money, formatStamp, humanize } from '../utils/format.js';
+
+// A blank coupon create form.
+function emptyCouponForm() {
+  return {
+    code: '',
+    type: 'percent',
+    value: '',
+    maxRedemptions: '',
+    perUserLimit: '',
+    minSubtotalCents: '',
+    description: '',
+  };
+}
 
 export class PnrxAdminDashboard extends PnrxComponent {
   constructor() {
@@ -23,6 +42,11 @@ export class PnrxAdminDashboard extends PnrxComponent {
       status: 'loading', // loading | ready | error
       dashboard: null,
       auditLog: [],
+      coupons: [],
+      couponForm: emptyCouponForm(),
+      couponBusy: false,
+      couponError: null,
+      couponNotice: null,
       error: null,
     };
   }
@@ -38,14 +62,16 @@ export class PnrxAdminDashboard extends PnrxComponent {
   async load() {
     this.setState({ status: 'loading', error: null });
     try {
-      const [dashboard, auditResult] = await Promise.all([
+      const [dashboard, auditResult, couponResult] = await Promise.all([
         fetchAdminDashboard(),
         fetchAuditLog(25),
+        fetchCoupons(),
       ]);
       this.setState({
         status: 'ready',
         dashboard: dashboard,
         auditLog: auditResult.entries || [],
+        coupons: couponResult.coupons || [],
       });
     } catch (err) {
       this.setState({
@@ -59,11 +85,12 @@ export class PnrxAdminDashboard extends PnrxComponent {
   }
 
   // Render supplied data directly, bypassing the API. Used by the demo page.
-  renderData(dashboard, auditEntries) {
+  renderData(dashboard, auditEntries, coupons) {
     this.setState({
       status: 'ready',
       dashboard: dashboard,
       auditLog: auditEntries || [],
+      coupons: coupons || [],
     });
   }
 
@@ -117,7 +144,116 @@ export class PnrxAdminDashboard extends PnrxComponent {
         d.subscriptionsByStatus || [],
         'status'
       ) +
+      this.renderCoupons() +
       this.renderAuditTable()
+    );
+  }
+
+  // The coupon management panel: a create form and the list of every coupon
+  // with an activate / deactivate control.
+  renderCoupons() {
+    const notice = this.state.couponNotice
+      ? '<p class="pnrx-admin__coupon-notice" role="status">' +
+        escapeHtml(this.state.couponNotice) +
+        '</p>'
+      : '';
+    const error = this.state.couponError
+      ? '<p class="pnrx-admin__coupon-error" role="alert">' +
+        escapeHtml(this.state.couponError) +
+        '</p>'
+      : '';
+    return (
+      '<section class="pnrx-admin__section">' +
+      '<h3 class="pnrx-admin__section-title">Discount Coupons</h3>' +
+      this.renderCouponForm() +
+      notice +
+      error +
+      this.renderCouponTable() +
+      '</section>'
+    );
+  }
+
+  renderCouponForm() {
+    const f = this.state.couponForm;
+    const busy = this.state.couponBusy;
+    function opt(value, label, selected) {
+      return (
+        '<option value="' +
+        value +
+        '"' +
+        (selected ? ' selected' : '') +
+        '>' +
+        label +
+        '</option>'
+      );
+    }
+    return (
+      '<div class="pnrx-admin__coupon-form">' +
+      '<input type="text" data-coupon-field="code" placeholder="Code" ' +
+      'value="' + escapeHtml(f.code) + '" />' +
+      '<select data-coupon-field="type">' +
+      opt('percent', 'Percent', f.type === 'percent') +
+      opt('fixed', 'Fixed (Cents)', f.type === 'fixed') +
+      '</select>' +
+      '<input type="text" data-coupon-field="value" ' +
+      'placeholder="Value" value="' + escapeHtml(f.value) + '" />' +
+      '<input type="text" data-coupon-field="maxRedemptions" ' +
+      'placeholder="Max Uses" value="' + escapeHtml(f.maxRedemptions) + '" />' +
+      '<input type="text" data-coupon-field="perUserLimit" ' +
+      'placeholder="Per User" value="' + escapeHtml(f.perUserLimit) + '" />' +
+      '<input type="text" data-coupon-field="minSubtotalCents" ' +
+      'placeholder="Min Order (Cents)" value="' +
+      escapeHtml(f.minSubtotalCents) + '" />' +
+      '<input type="text" data-coupon-field="description" ' +
+      'placeholder="Description" value="' + escapeHtml(f.description) + '" />' +
+      '<button type="button" class="pnrx-admin__btn" ' +
+      'data-action="create-coupon"' + (busy ? ' disabled' : '') + '>' +
+      (busy ? 'Saving' : 'Create Coupon') +
+      '</button>' +
+      '</div>'
+    );
+  }
+
+  renderCouponTable() {
+    const rows = this.state.coupons || [];
+    if (!rows.length) {
+      return '<p class="pnrx-admin__empty">No Coupons Yet.</p>';
+    }
+    const body = rows
+      .map(function (c) {
+        const value =
+          c.type === 'percent'
+            ? c.value + ' Percent'
+            : money(c.value);
+        const uses =
+          String(c.redemptionCount) +
+          (c.maxRedemptions != null ? ' / ' + c.maxRedemptions : '');
+        const statusTag = c.isActive
+          ? '<span class="pnrx-admin__tag pnrx-admin__tag--good">Active</span>'
+          : '<span class="pnrx-admin__tag">Inactive</span>';
+        const toggleLabel = c.isActive ? 'Deactivate' : 'Activate';
+        return (
+          '<tr>' +
+          '<td>' + escapeHtml(c.code) + '</td>' +
+          '<td>' + escapeHtml(humanize(c.type)) + '</td>' +
+          '<td>' + escapeHtml(value) + '</td>' +
+          '<td class="pnrx-admin__num">' + escapeHtml(uses) + '</td>' +
+          '<td>' + statusTag + '</td>' +
+          '<td><button type="button" class="pnrx-admin__btn ' +
+          'pnrx-admin__btn--sm" data-toggle-coupon="' + escapeHtml(c.id) +
+          '" data-coupon-active="' + (c.isActive ? '1' : '0') + '">' +
+          toggleLabel + '</button></td>' +
+          '</tr>'
+        );
+      })
+      .join('');
+    return (
+      '<table class="pnrx-admin__table">' +
+      '<thead><tr><th>Code</th><th>Type</th><th>Value</th>' +
+      '<th class="pnrx-admin__num">Uses</th><th>Status</th>' +
+      '<th>Action</th></tr></thead>' +
+      '<tbody>' + body + '</tbody>' +
+      '</table>'
     );
   }
 
@@ -228,6 +364,127 @@ export class PnrxAdminDashboard extends PnrxComponent {
     if (retry) {
       retry.addEventListener('click', function () {
         self.load();
+      });
+    }
+
+    const createBtn = this.$('[data-action="create-coupon"]');
+    if (createBtn) {
+      createBtn.addEventListener('click', function () {
+        self.submitCoupon();
+      });
+    }
+
+    this.$$('[data-toggle-coupon]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        self.toggleCoupon(
+          btn.getAttribute('data-toggle-coupon'),
+          btn.getAttribute('data-coupon-active') === '1'
+        );
+      });
+    });
+  }
+
+  // -- Coupon actions --------------------------------------------------------
+
+  // Read the coupon create form straight from the DOM. The form fields are not
+  // bound to state per keystroke - the base component re-renders by replacing
+  // innerHTML, which would drop input focus on every character - so the values
+  // are collected only when an action runs.
+  readCouponForm() {
+    const self = this;
+    function read(name) {
+      const el = self.$('[data-coupon-field="' + name + '"]');
+      return el ? el.value : '';
+    }
+    return {
+      code: read('code'),
+      type: read('type'),
+      value: read('value'),
+      maxRedemptions: read('maxRedemptions'),
+      perUserLimit: read('perUserLimit'),
+      minSubtotalCents: read('minSubtotalCents'),
+      description: read('description'),
+    };
+  }
+
+  // Create a coupon from the form. Optional numeric fields are omitted when
+  // left blank so the backend applies its defaults.
+  async submitCoupon() {
+    if (this.state.couponBusy) return;
+    const form = this.readCouponForm();
+    const code = form.code.trim();
+    const value = parseInt(form.value, 10);
+    if (code === '' || !Number.isInteger(value) || value <= 0) {
+      this.setState({
+        couponForm: form,
+        couponError: 'A Code And A Positive Value Are Required.',
+        couponNotice: null,
+      });
+      return;
+    }
+
+    const payload = { code: code, type: form.type, value: value };
+    function optPositiveInt(name, raw) {
+      const n = parseInt(raw, 10);
+      if (Number.isInteger(n) && n > 0) payload[name] = n;
+    }
+    optPositiveInt('maxRedemptions', form.maxRedemptions);
+    optPositiveInt('perUserLimit', form.perUserLimit);
+    const minSub = parseInt(form.minSubtotalCents, 10);
+    if (Number.isInteger(minSub) && minSub >= 0) {
+      payload.minSubtotalCents = minSub;
+    }
+    if (form.description.trim() !== '') {
+      payload.description = form.description.trim();
+    }
+
+    this.setState({
+      couponBusy: true,
+      couponError: null,
+      couponNotice: null,
+      couponForm: form,
+    });
+    try {
+      await createCoupon(payload);
+      this.setState({
+        couponBusy: false,
+        couponForm: emptyCouponForm(),
+        couponNotice: 'Coupon ' + code.toUpperCase() + ' Created.',
+        couponError: null,
+      });
+      await this.load();
+    } catch (err) {
+      this.setState({
+        couponBusy: false,
+        couponForm: form,
+        couponError:
+          err && err.message
+            ? err.message
+            : 'The Coupon Could Not Be Created.',
+      });
+    }
+  }
+
+  // Activate or deactivate a coupon.
+  async toggleCoupon(couponId, isCurrentlyActive) {
+    if (this.state.couponBusy) return;
+    this.setState({
+      couponBusy: true,
+      couponError: null,
+      couponNotice: null,
+      couponForm: this.readCouponForm(),
+    });
+    try {
+      await updateCoupon(couponId, { isActive: !isCurrentlyActive });
+      this.setState({ couponBusy: false });
+      await this.load();
+    } catch (err) {
+      this.setState({
+        couponBusy: false,
+        couponError:
+          err && err.message
+            ? err.message
+            : 'The Coupon Could Not Be Updated.',
       });
     }
   }

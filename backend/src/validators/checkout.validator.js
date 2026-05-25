@@ -71,6 +71,10 @@ const checkoutSchema = z
     // Optional references that link the checkout to the rest of the record.
     intakeSubmissionId: z.string().uuid().optional(),
     affiliateCode: z.string().trim().min(1).max(64).optional(),
+    // An optional discount code applied to this order. The controller resolves
+    // and validates the code and computes the discount; this schema only
+    // checks its shape.
+    couponCode: z.string().trim().min(1).max(64).optional(),
     // The id returned by POST /api/affiliate/track-referral when the visitor
     // arrived through a /?ref= link. Carried back here so the checkout marks
     // that exact referral converted rather than recording a direct one.

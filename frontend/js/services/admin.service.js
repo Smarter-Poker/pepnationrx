@@ -23,3 +23,20 @@ export function fetchAuditLog(limit) {
     Number.isInteger(limit) && limit > 0 ? '?limit=' + limit : '';
   return api.get('/api/admin/audit-log' + suffix);
 }
+
+// Fetch every coupon for the staff coupon panel.
+export function fetchCoupons() {
+  return api.get('/api/admin/coupons');
+}
+
+// Create a coupon. `payload` carries code, type, value, and the optional
+// limits and window fields.
+export function createCoupon(payload) {
+  return api.post('/api/admin/coupons', payload);
+}
+
+// Update a coupon's mutable terms. `fields` carries any of isActive,
+// maxRedemptions, perUserLimit, minSubtotalCents, expiresAt, description.
+export function updateCoupon(couponId, fields) {
+  return api.patch('/api/admin/coupons/' + couponId, fields);
+}

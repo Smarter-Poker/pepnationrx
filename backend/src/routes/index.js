@@ -13,8 +13,10 @@ const { query } = require('../db/query');
 const authRoutes = require('./auth.routes');
 const intakeRoutes = require('./intake.routes');
 const checkoutRoutes = require('./checkout.routes');
+const couponRoutes = require('./coupon.routes');
 const checkinRoutes = require('./checkin.routes');
 const patientRoutes = require('./patient.routes');
+const providerRoutes = require('./provider.routes');
 const affiliateRoutes = require('./affiliate.routes');
 const adminRoutes = require('./admin.routes');
 const medicalNetworkWebhook = require('../webhooks/medical-network.webhook');
@@ -45,10 +47,12 @@ router.get('/health/ready', async (req, res) => {
 router.use('/auth', authRoutes);
 router.use('/intake', intakeRoutes);
 router.use('/checkout', checkoutRoutes);
+router.use('/coupons', couponRoutes);
 // Check-in routes are mounted at '/' because their paths (/subscriptions/…
 // and /checkins/…) are already fully qualified inside checkin.routes.js.
 router.use('/', checkinRoutes);
 router.use('/patient', patientRoutes);
+router.use('/provider', providerRoutes);
 router.use('/affiliate', affiliateRoutes);
 router.use('/admin', adminRoutes);
 

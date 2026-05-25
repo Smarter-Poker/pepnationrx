@@ -23,6 +23,9 @@ const referralModel = require('../models/affiliate-referral.model');
 const treatmentModel = require('../models/treatment.model');
 const subscriptionModel = require('../models/subscription.model');
 const transactionModel = require('../models/transaction.model');
+const couponModel = require('../models/coupon.model');
+const membershipService = require('../services/membership');
+const couponService = require('../services/coupon');
 const { withTransaction } = require('../db/query');
 
 // Consent types the patient must accept on the checkout screen. The MSO
@@ -134,9 +137,60 @@ async function place(req, res, next) {
     // charge and the management fee is a percent of the gross.
     // B-09: pg returns NUMERIC columns as JS strings; coerce to integer before
     // multiplying so computeSplit always receives a whole-number gross.
-    const priceCentsInt = Math.round(Number(plan.price_cents));
-    const grossAmountCents = priceCentsInt * input.cadenceMonths;
+    const basePriceCentsInt = Math.round(Number(plan.price_cents));
+    // PepNationRX Plus member pricing: an active member is charged the
+    // discounted per-month price on this order and on every renewal (the
+    // discounted value is stored as the subscription's mrr_cents). The price
+    // is resolved server-side from the member's record, never the request.
+    const memberPricing = await membershipService.resolvePlanPriceForUser(
+      basePriceCentsInt,
+      req.user.id
+    );
+    const priceCentsInt = memberPricing.effectiveCents;
+    const subtotalCents = priceCentsInt * input.cadenceMonths;
     const consultFeeCents = constants.FEE_SPLIT.consultFeeCents;
+
+    // Coupon discount: an optional code is a one-time discount on this order.
+    // It comes off the order subtotal; the discounted amount is what the
+    // patient is charged and what the transaction records. The provider's flat
+    // consult fee is unaffected - the provider is paid in full - the platform
+    // management fee is recomputed on the discounted gross, and the medical
+    // practice absorbs the discount from its medical revenue. The subscription
+    // mrr is unchanged, so renewals continue to bill the full plan price.
+    let coupon = null;
+    let couponDiscountCents = 0;
+    if (input.couponCode) {
+      coupon = await couponService.validateCoupon(
+        input.couponCode,
+        req.user.id
+      );
+      if (subtotalCents < coupon.min_subtotal_cents) {
+        throw errors.unprocessable(
+          'Your order does not meet the minimum for that coupon code.'
+        );
+      }
+      const rawDiscount = couponService.computeDiscountCents(
+        coupon,
+        subtotalCents
+      );
+      // The discounted gross must still cover the provider consult fee and the
+      // management fee. Cap the discount at a floor that keeps the tri-party
+      // split valid: discounted gross * (1 - managementFeePct/100) must stay
+      // at or above the flat consult fee.
+      const minNetGross = Math.ceil(
+        consultFeeCents / (1 - constants.FEE_SPLIT.managementFeePct / 100)
+      );
+      const maxDiscount = Math.max(0, subtotalCents - minNetGross);
+      couponDiscountCents = Math.min(rawDiscount, maxDiscount);
+      if (rawDiscount > 0 && couponDiscountCents === 0) {
+        throw errors.unprocessable(
+          'That coupon cannot be applied to an order this small.'
+        );
+      }
+    }
+
+    // The gross billed for this order: the subtotal less any coupon discount.
+    const grossAmountCents = subtotalCents - couponDiscountCents;
     const managementFeeCents = Math.round(
       (grossAmountCents * constants.FEE_SPLIT.managementFeePct) / 100
     );
@@ -217,6 +271,30 @@ async function place(req, res, next) {
         client
       );
 
+      // When a coupon was applied, record the redemption inside this same
+      // transaction so the discount, the subscription, and the charge commit
+      // as one unit. recordRedemption claims a slot with a guarded UPDATE; a
+      // null result means the code was exhausted or deactivated since it was
+      // validated, so the whole checkout is rolled back.
+      let couponRedemption = null;
+      if (coupon && couponDiscountCents > 0) {
+        couponRedemption = await couponModel.recordRedemption(
+          {
+            couponId: coupon.id,
+            userId: req.user.id,
+            subscriptionId: subscription.id,
+            transactionId: transaction.id,
+            discountCents: couponDiscountCents,
+          },
+          client
+        );
+        if (!couponRedemption) {
+          throw errors.conflict(
+            'That coupon code is no longer available. Please remove it and try again.'
+          );
+        }
+      }
+
       // When the checkout is attributed to an affiliate, record the referral
       // conversion on this same transaction so it commits with the
       // subscription. A referralId from a tracked /?ref= landing marks that
@@ -251,6 +329,7 @@ async function place(req, res, next) {
         address: address,
         subscription: subscription,
         transaction: transaction,
+        couponRedemption: couponRedemption,
       };
     });
 
@@ -264,6 +343,20 @@ async function place(req, res, next) {
       userAgent: meta.userAgent,
     });
 
+    // Record the coupon redemption separately so the discount is traceable in
+    // the audit log against the coupon entity, not just the subscription.
+    if (placed.couponRedemption) {
+      await audit.record({
+        actorUserId: req.user.id,
+        actorRole: req.user.role,
+        action: 'coupon.redeemed',
+        entityType: 'coupon',
+        entityId: coupon.id,
+        ipAddress: meta.ipAddress,
+        userAgent: meta.userAgent,
+      });
+    }
+
     res.status(201).json({
       subscription: placed.subscription,
       transaction: placed.transaction,
@@ -276,6 +369,12 @@ async function place(req, res, next) {
         medicalRevenueCents: split.medicalRevenueCents,
         cadenceMonths: input.cadenceMonths,
         pricePerMonthCents: priceCentsInt,
+        basePricePerMonthCents: basePriceCentsInt,
+        memberDiscountApplied: memberPricing.memberDiscountApplied,
+        subtotalCents: subtotalCents,
+        couponCode: coupon ? coupon.code : null,
+        couponDiscountCents: couponDiscountCents,
+        couponApplied: couponDiscountCents > 0,
         currency: 'USD',
       },
     });

@@ -125,8 +125,12 @@ export class PnrxAuth extends PnrxComponent {
 
   canSubmit() {
     const s = this.state;
-    const credentialsReady =
-      s.email.trim() !== '' && s.password.trim() !== '' && !s.submitting;
+    const hasEmail = s.email.trim() !== '';
+    // Enforce the 10-character minimum shown in the UI hint.
+    const hasPassword = s.mode === 'register'
+      ? s.password.length >= 10
+      : s.password.trim() !== '';
+    const credentialsReady = hasEmail && hasPassword && !s.submitting;
     if (s.mode === 'register') {
       // Registration also requires the two-letter state of residence so the
       // patient's telehealth encounter can be routed correctly.
@@ -289,14 +293,23 @@ export class PnrxAuth extends PnrxComponent {
 
   // -- Event binding ---------------------------------------------------------
 
+  // Update only the submit button's disabled state — no re-render needed.
+  // Called after quiet field writes so the button reflects current canSubmit()
+  // without destroying the focused input.
+  refreshSubmitButton() {
+    const btn = this.$('[data-action="submit"]');
+    if (btn) btn.disabled = !this.canSubmit();
+  }
+
   afterRender() {
     const self = this;
 
+    // Quiet-write: update state directly without re-rendering so the input
+    // keeps focus and cursor position. Only refresh the submit button.
     this.$$('[data-field]').forEach(function (input) {
       input.addEventListener('input', function () {
-        const patch = {};
-        patch[input.getAttribute('data-field')] = input.value;
-        self.setState(patch);
+        self.state[input.getAttribute('data-field')] = input.value;
+        self.refreshSubmitButton();
       });
     });
 

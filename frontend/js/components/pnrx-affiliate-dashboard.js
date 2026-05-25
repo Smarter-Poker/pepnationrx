@@ -254,6 +254,8 @@ export class PnrxAffiliateDashboard extends PnrxComponent {
             setTimeout(function () {
               copy.textContent = 'Copy';
             }, 2000);
+          }).catch(function () {
+            // Clipboard access denied — silently ignore and leave the URL visible.
           });
         }
       });

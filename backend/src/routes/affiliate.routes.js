@@ -10,9 +10,13 @@ const express = require('express');
 const affiliateController = require('../controllers/affiliate.controller');
 const payoutController = require('../controllers/affiliate-payout.controller');
 const authenticate = require('../middleware/authenticate');
+const authorize = require('../middleware/authorize');
 const { credentialLimiter } = require('../middleware/rate-limit');
 
 const router = express.Router();
+
+// Shared guard: must be authenticated as an admin or support agent.
+const adminOnly = [authenticate, authorize('admin', 'support')];
 
 // The authenticated affiliate's dashboard: profile, referral funnel,
 // attributed revenue, and payout ledger.
@@ -33,8 +37,9 @@ router.post('/track-referral', credentialLimiter, affiliateController.trackRefer
 router.get('/payouts', authenticate, payoutController.list);
 router.post('/payouts/request', authenticate, payoutController.request);
 
-// Admin-only payout management.
-router.post('/payouts/:payoutId/schedule', authenticate, payoutController.schedule);
-router.post('/payouts/:payoutId/mark-paid', authenticate, payoutController.markPaid);
+// Admin-only payout management. These mutate financial records and MUST be
+// gated at the route level, not just inside the controller.
+router.post('/payouts/:payoutId/schedule', adminOnly, payoutController.schedule);
+router.post('/payouts/:payoutId/mark-paid', adminOnly, payoutController.markPaid);
 
 module.exports = router;

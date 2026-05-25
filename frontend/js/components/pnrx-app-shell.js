@@ -19,6 +19,7 @@ import { isAuthenticated, getUser, subscribe } from '../store/session.js';
 import { restoreSession, logout } from '../services/auth.service.js';
 import { submitIntake } from '../services/intake.service.js';
 import { showToast } from '../utils/toast.js';
+import { configureApi } from '../services/api.js';
 
 // Note: The full MSO billing-agent disclosure lives in pnrx-checkout.js
 // where the patient actively acknowledges it before placing an order.
@@ -30,6 +31,9 @@ import './pnrx-catalog.js';
 import './pnrx-triage-form.js';
 import './pnrx-checkout.js';
 import './pnrx-patient-dashboard.js';
+import './pnrx-message-thread.js';
+import './pnrx-insurance-checker.js';
+import './pnrx-membership.js';
 import './pnrx-affiliate-dashboard.js';
 import './pnrx-admin-dashboard.js';
 import './pnrx-auth.js';
@@ -52,6 +56,14 @@ export class PnrxAppShell extends HTMLElement {
   }
 
   connectedCallback() {
+    // Configure the API client. Vercel proxies /api/* to the Hetzner backend
+    // so same-origin fetch works in production. For non-Vercel deployments,
+    // set a `data-api-base` attribute on the <pnrx-app-shell> element or a
+    // <meta name="api-base"> tag to override the base URL.
+    const metaBase = document.querySelector('meta[name="api-base"]');
+    const attrBase = this.getAttribute('data-api-base');
+    const apiBase = attrBase || (metaBase && metaBase.getAttribute('content')) || '';
+    configureApi({ baseUrl: apiBase });
     this.innerHTML =
       '<div class="pnrx-shell">' +
       '<header class="pnrx-shell__header">' +
@@ -151,6 +163,27 @@ export class PnrxAppShell extends HTMLElement {
           return self.requireSignInNotice();
         }
         return document.createElement('pnrx-patient-dashboard');
+      },
+      '/messages': function () {
+        if (!isAuthenticated()) {
+          self.router.navigate('/login');
+          return self.requireSignInNotice();
+        }
+        return document.createElement('pnrx-message-thread');
+      },
+      '/insurance': function () {
+        if (!isAuthenticated()) {
+          self.router.navigate('/login');
+          return self.requireSignInNotice();
+        }
+        return document.createElement('pnrx-insurance-checker');
+      },
+      '/membership': function () {
+        if (!isAuthenticated()) {
+          self.router.navigate('/login');
+          return self.requireSignInNotice();
+        }
+        return document.createElement('pnrx-membership');
       },
       '/affiliate': function () {
         if (!isAuthenticated()) {
@@ -265,14 +298,21 @@ export class PnrxAppShell extends HTMLElement {
     // A completed intake is persisted to the backend so a provider can review
     // it, then advances to checkout when a plan was selected. The intake is
     // saved only for a signed-in patient; an anonymous visitor is routed
-    // onward and will create an account before checkout. A save failure is
-    // surfaced but does not block navigation.
+    // onward and will create an account before checkout. A save failure
+    // blocks navigation to checkout because the backend requires an
+    // intakeSubmissionId to link the order to the patient's clinical record.
     this.addEventListener('triage:submit', function (event) {
       const detail = event.detail || {};
       const proceed = function () {
         self.router.navigate(self.pendingSelection ? '/checkout' : '/dashboard');
       };
       if (!isAuthenticated()) {
+        // Store the raw intake detail so we can submit it AFTER the patient
+        // signs in. Without this, the intakeSubmissionId would be missing and
+        // the clinical audit trail (intake → subscription) would be broken.
+        if (self.pendingSelection) {
+          self.pendingSelection._pendingIntakeDetail = detail;
+        }
         proceed();
         return;
       }
@@ -281,11 +321,18 @@ export class PnrxAppShell extends HTMLElement {
           if (self.pendingSelection && result && result.submission) {
             self.pendingSelection.intakeSubmissionId = result.submission.id;
           }
+          // Intake saved successfully — safe to proceed to checkout.
+          proceed();
         })
         .catch(function () {
-          showToast('Your Intake Could Not Be Saved. Please Try Again.', 'error');
-        })
-        .finally(proceed);
+          // Intake save failed. Surface the error and keep the patient on
+          // the current screen so they can retry. Do not navigate to checkout
+          // without a valid intakeSubmissionId.
+          showToast(
+            'Your Intake Could Not Be Saved. Please Check Your Connection And Try Again.',
+            'error'
+          );
+        });
     });
 
     // A completed checkout returns the patient to their dashboard.
@@ -304,10 +351,42 @@ export class PnrxAppShell extends HTMLElement {
       showToast(detail.message || 'Checkout Could Not Be Completed.', 'error');
     });
 
-    // A successful sign-in or registration opens the patient dashboard.
+    // A successful sign-in or registration: if the patient was mid-flow (they
+    // chose a treatment and went through intake before signing in), submit any
+    // deferred intake then resume at checkout so the order can be completed.
+    // Otherwise open the dashboard.
     this.addEventListener('auth:success', function () {
       showToast('You Are Signed In.', 'success');
-      self.router.navigate('/dashboard');
+      if (self.pendingSelection) {
+        const deferredIntake = self.pendingSelection._pendingIntakeDetail;
+        if (deferredIntake) {
+          // The patient completed intake while anonymous — save it now that
+          // we have an authenticated session so the intakeSubmissionId is
+          // available for checkout.
+          delete self.pendingSelection._pendingIntakeDetail;
+          submitIntake(deferredIntake)
+            .then(function (result) {
+              if (result && result.submission) {
+                self.pendingSelection.intakeSubmissionId = result.submission.id;
+              }
+              self.router.navigate('/checkout');
+            })
+            .catch(function () {
+              // Intake save failed even after sign-in. Let the patient proceed
+              // to checkout — the backend allows a null intakeSubmissionId for
+              // edge-case recovery, but surface a warning.
+              showToast(
+                'Your Intake Could Not Be Saved. Your Order Will Still Be Placed.',
+                'error'
+              );
+              self.router.navigate('/checkout');
+            });
+        } else {
+          self.router.navigate('/checkout');
+        }
+      } else {
+        self.router.navigate('/dashboard');
+      }
     });
   }
 
@@ -323,6 +402,19 @@ export class PnrxAppShell extends HTMLElement {
       const label =
         user && user.first_name ? 'Hello, ' + user.first_name : 'My Dashboard';
       links.push('<a class="pnrx-shell__link" href="#/dashboard">' + label + '</a>');
+      // Secure messaging is a patient-facing surface; staff use the provider
+      // tools, not this nav link.
+      if (!user || STAFF_ROLES.indexOf(user.role) === -1) {
+        links.push(
+          '<a class="pnrx-shell__link" href="#/messages">Messages</a>'
+        );
+        links.push(
+          '<a class="pnrx-shell__link" href="#/insurance">Insurance</a>'
+        );
+        links.push(
+          '<a class="pnrx-shell__link" href="#/membership">PepNationRX Plus</a>'
+        );
+      }
       if (user && STAFF_ROLES.indexOf(user.role) !== -1) {
         links.push(
           '<a class="pnrx-shell__link" href="#/admin">Admin Console</a>'

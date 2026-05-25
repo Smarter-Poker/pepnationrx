@@ -101,18 +101,23 @@ export class PnrxCatalog extends PnrxComponent {
   beginIntake() {
     const treatment = getTreatment(this.state.treatmentSlug);
     if (!treatment || treatment.availability !== 'available') return;
+    const selectedCadence = this.state.selectedCadence;
     const plan =
       treatment.plans.filter(function (p) {
-        return p.cadenceMonths === this.state.selectedCadence;
-      }, this)[0] || defaultPlan(treatment);
+        return p.cadenceMonths === selectedCadence;
+      })[0] || defaultPlan(treatment);
+    // Guard: a treatment must have a resolvable plan with a price before we
+    // can proceed. Without this, an order with null priceCents could slip
+    // through to checkout and be rejected by the backend.
+    if (!plan || typeof plan.priceCents !== 'number') return;
     this.emit('catalog:select', {
       treatmentSlug: treatment.slug,
       treatmentName: treatment.name,
       categorySlug: treatment.categorySlug,
       protocolCategory: treatment.protocolCategory,
       prescriptionRequired: treatment.prescriptionRequired,
-      planCadenceMonths: plan ? plan.cadenceMonths : null,
-      planPriceCents: plan ? plan.priceCents : null,
+      planCadenceMonths: plan.cadenceMonths,
+      planPriceCents: plan.priceCents,
     });
   }
 

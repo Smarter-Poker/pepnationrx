@@ -228,3 +228,52 @@ pnrx-admin-dashboard {
 .pnrx-admin__section { background: var(--white); border: 1px solid var(--canvas-200); border-radius: var(--radius-lg); box-shadow: var(--elev-2); padding: var(--space-5); margin-bottom: var(--space-6); }
 .pnrx-admin__section-title { font-size: var(--text-lg); font-weight: var(--weight-bold); color: var(--canvas-700); margin: 0 0 var(--space-4); }
 .pnrx-admin__tag { display: inline-block; padding: 2px 6px; font-size: 10px; font-weight: var(--weight-bold); text-transform: uppercase; border-radius: var(--radius-pill); background: var(--red-100); color: var(--red-600); margin-left: var(--space-2); }
+.pnrx-admin__tag--good { background: var(--teal-100); color: var(--teal-600); }
+
+/* ── Coupon panel ─────────────────────────────────────────────────────────── */
+.pnrx-admin__coupon-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.pnrx-admin__coupon-form input,
+.pnrx-admin__coupon-form select {
+  flex: 1 1 130px;
+  min-width: 0;
+  padding: 8px var(--space-3);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--canvas-700);
+  background: var(--white);
+  border: 1.5px solid var(--canvas-200);
+  border-radius: var(--radius-md);
+}
+
+.pnrx-admin__coupon-form input:focus,
+.pnrx-admin__coupon-form select:focus {
+  outline: none;
+  border-color: var(--teal-500);
+}
+
+.pnrx-admin__coupon-form .pnrx-admin__btn {
+  flex: 0 0 auto;
+}
+
+.pnrx-admin__btn--sm {
+  padding: 4px var(--space-3);
+  font-size: var(--text-xs);
+}
+
+.pnrx-admin__coupon-notice {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--teal-600);
+}
+
+.pnrx-admin__coupon-error {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--red-600);
+}

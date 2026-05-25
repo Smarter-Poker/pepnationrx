@@ -42,6 +42,8 @@
   /* Teal — Ro-inspired deep clinical teal, not neon */
   --teal-50:  hsl(174, 55%, 95%);   /* very light tint — selected bg  */
   --teal-100: hsl(174, 52%, 86%);   /* light tint — hover tint        */
+  --teal-200: hsl(174, 58%, 72%);   /* medium tint — coupon hover     */
+  --teal-300: hsl(174, 65%, 56%);   /* medium accent                  */
   --teal-400: hsl(174, 70%, 36%);   /* hover state                    */
   --teal-500: hsl(174, 75%, 30%);   /* ← PRIMARY — clinical, deep     */
   --teal-600: hsl(174, 78%, 24%);   /* pressed / active               */
@@ -104,7 +106,6 @@
   --grey-400: var(--canvas-500);
   --grey-500: var(--canvas-500);
   --grey-600: var(--canvas-600);
-  --grey-700: var(--canvas-700);
   --grey-700: var(--canvas-700);
 
   /* ==========================================================================

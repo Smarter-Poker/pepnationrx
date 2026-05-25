@@ -219,19 +219,74 @@ export class PnrxPatientDashboard extends PnrxComponent {
     const self = this;
     const rows = subscriptions
       .map(function (s) {
-        const detail =
-          'Next Billing ' + formatDate(s.next_billing_date, 'Not Scheduled');
-        const kind = s.status === 'active' || s.status === 'trialing' ? 'good' :
-          s.status === 'past_due' ? 'warn' : 'neutral';
-        return self.row(
-          s.plan_name || humanize(s.protocol_category),
-          detail,
-          humanize(s.status),
-          kind
-        );
+        return self.subscriptionRow(s);
       })
       .join('');
     return this.section('Your Subscriptions', rows, 'You Have No Subscriptions Yet.');
+  }
+
+  // One subscription row with self-service controls. An active or trialing
+  // plan can be paused or canceled; a paused plan can be resumed or canceled;
+  // a past_due plan can only be canceled; a canceled or expired plan shows no
+  // controls. Action buttons are omitted entirely in demo mode, which has no
+  // authenticated API session.
+  subscriptionRow(s) {
+    // Guard: if id is missing there is no safe way to build action URLs.
+    if (!s || !s.id) return '';
+    const detail =
+      'Next Billing ' + formatDate(s.next_billing_date, 'Not Scheduled');
+    const kind =
+      s.status === 'active' || s.status === 'trialing'
+        ? 'good'
+        : s.status === 'past_due'
+          ? 'warn'
+          : 'neutral';
+    const pill =
+      '<span class="pnrx-dash__pill pnrx-dash__pill--' +
+      kind +
+      '">' +
+      escapeHtml(humanize(s.status)) +
+      '</span>';
+
+    let buttons = '';
+    if (this.getAttribute('mode') !== 'demo') {
+      const id = escapeHtml(String(s.id || ''));
+      const pauseBtn =
+        '<button type="button" class="pnrx-dash__btn pnrx-dash__btn--sm" ' +
+        'data-sub-action="pause" data-sub-id="' + id + '">Pause</button>';
+      const resumeBtn =
+        '<button type="button" class="pnrx-dash__btn pnrx-dash__btn--sm" ' +
+        'data-sub-action="resume" data-sub-id="' + id + '">Resume</button>';
+      const cancelBtn =
+        '<button type="button" ' +
+        'class="pnrx-dash__btn pnrx-dash__btn--sm pnrx-dash__btn--danger" ' +
+        'data-sub-action="cancel" data-sub-id="' + id + '">Cancel</button>';
+      if (s.status === 'active' || s.status === 'trialing') {
+        buttons = pauseBtn + cancelBtn;
+      } else if (s.status === 'paused') {
+        buttons = resumeBtn + cancelBtn;
+      } else if (s.status === 'past_due') {
+        buttons = cancelBtn;
+      }
+    }
+    const actions = buttons
+      ? '<div class="pnrx-dash__row-actions">' + buttons + '</div>'
+      : '';
+
+    return (
+      '<div class="pnrx-dash__row pnrx-dash__row--sub">' +
+      '<div class="pnrx-dash__row-main">' +
+      '<span class="pnrx-dash__row-primary">' +
+      escapeHtml(s.plan_name || humanize(s.protocol_category)) +
+      '</span>' +
+      '<span class="pnrx-dash__row-secondary">' +
+      escapeHtml(detail) +
+      '</span>' +
+      '</div>' +
+      pill +
+      actions +
+      '</div>'
+    );
   }
 
   renderPrescriptions(prescriptions) {
@@ -331,6 +386,44 @@ export class PnrxPatientDashboard extends PnrxComponent {
     if (retry) {
       retry.addEventListener('click', function () {
         self.load();
+      });
+    }
+
+    // Subscription self-service controls: pause, resume, or cancel. Skipped in
+    // demo mode (the buttons are not rendered there). Cancel asks for explicit
+    // confirmation because it cannot be undone. On success the dashboard is
+    // reloaded so every panel reflects the new state.
+    if (this.getAttribute('mode') !== 'demo') {
+      this.$$('[data-sub-action]').forEach(function (btn) {
+        btn.addEventListener('click', async function () {
+          const action = btn.getAttribute('data-sub-action');
+          const id = btn.getAttribute('data-sub-id');
+          if (!id) return;
+          if (
+            action === 'cancel' &&
+            !window.confirm(
+              'Cancel This Subscription? This Cannot Be Undone.'
+            )
+          ) {
+            return;
+          }
+          btn.disabled = true;
+          try {
+            await api.patch(
+              '/api/patient/subscriptions/' + encodeURIComponent(id),
+              { action: action }
+            );
+            await self.load();
+          } catch (e) {
+            self.setState({
+              status: 'error',
+              error:
+                e && e.message
+                  ? e.message
+                  : 'The Subscription Change Could Not Be Applied.',
+            });
+          }
+        });
       });
     }
 

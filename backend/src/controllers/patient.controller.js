@@ -11,13 +11,64 @@
 
 const userModel = require('../models/user.model');
 const subscriptionModel = require('../models/subscription.model');
+const subscriptionEventModel = require('../models/subscription-event.model');
 const prescriptionModel = require('../models/prescription.model');
 const pharmacyOrderModel = require('../models/pharmacy-order.model');
 const transactionModel = require('../models/transaction.model');
 const addressModel = require('../models/address.model');
 const notificationModel = require('../models/notification.model');
+const notificationService = require('../services/notification');
 const audit = require('../services/audit.service');
 const errors = require('../utils/errors');
+
+// Human-readable change phrase per subscription event, used in the
+// subscription_changed notification body.
+const SUBSCRIPTION_CHANGE_TEXT = {
+  paused: 'Your Plan Was Paused. Billing And Refills Are On Hold Until You Resume.',
+  resumed: 'Your Plan Was Resumed And Is Active Again.',
+  canceled: 'Your Plan Was Canceled. No Further Billing Will Occur.',
+};
+
+// Record a subscription state change to the audit log, the subscription_events
+// history, and the patient's notification timeline. `event` is one of
+// 'paused', 'resumed', 'canceled'. Notification failure never throws (the
+// notification service swallows its own errors), so a change is durably
+// recorded even if the email cannot be sent.
+async function recordSubscriptionChange(req, sub, updated, event) {
+  const eventRow = await subscriptionEventModel.record({
+    subscriptionId: sub.id,
+    userId: sub.user_id,
+    eventType: event,
+    fromStatus: sub.status,
+    toStatus: updated.status,
+    metadata: { actorRole: req.user.role },
+  });
+
+  await audit.record({
+    actorUserId: req.user.id,
+    actorRole: req.user.role,
+    action: 'subscription.' + event,
+    entityType: 'subscription',
+    entityId: sub.id,
+    phiAccessed: false,
+    ipAddress: req.ip,
+    userAgent: req.get('user-agent') || null,
+  });
+
+  await notificationService.send({
+    userId: sub.user_id,
+    template: 'subscription_changed',
+    payload: {
+      planName: sub.plan_name,
+      change: SUBSCRIPTION_CHANGE_TEXT[event] || 'A Change Was Applied.',
+    },
+    // Key the dedupe on the unique subscription_events row id. Each distinct
+    // change is its own event, so re-pausing after a resume always notifies,
+    // while a server retry of the same request is still idempotent (the same
+    // event row is referenced).
+    dedupeKey: 'subscription-changed:' + eventRow.id,
+  });
+}
 
 // GET /api/patient/dashboard - the authenticated patient's full dashboard.
 async function dashboard(req, res, next) {
@@ -74,7 +125,8 @@ async function dashboard(req, res, next) {
 
 // DELETE /api/patient/subscriptions/:subscriptionId
 // A patient cancels one of their own subscriptions. Only the subscription
-// owner may cancel; admins use the admin router.
+// owner may cancel; admins use the admin router. Retained for backward
+// compatibility; PATCH with action 'cancel' is the unified path.
 async function cancelSubscription(req, res, next) {
   try {
     const subscriptionId = req.params.subscriptionId;
@@ -92,18 +144,74 @@ async function cancelSubscription(req, res, next) {
       return next(errors.conflict('Subscription Is Already Canceled Or Expired.'));
     }
 
-    await audit.record({
-      actorUserId: req.user.id,
-      actorRole: req.user.role,
-      action: 'subscription.canceled',
-      entityType: 'subscription',
-      entityId: subscriptionId,
-      phiAccessed: false,
-      ipAddress: req.ip,
-      userAgent: req.get('user-agent') || null,
-    });
+    await recordSubscriptionChange(req, sub, result, 'canceled');
 
     res.status(200).json({ subscription: result });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// PATCH /api/patient/subscriptions/:subscriptionId
+// The unified self-service subscription endpoint. The request body carries an
+// `action` of 'pause', 'resume', or 'cancel'. Only the subscription owner may
+// act. Each successful transition is recorded to the subscription_events
+// history, the audit log, and the patient's notification timeline.
+async function patchSubscription(req, res, next) {
+  try {
+    const subscriptionId = req.params.subscriptionId;
+    const action =
+      typeof req.body.action === 'string'
+        ? req.body.action.trim().toLowerCase()
+        : '';
+
+    if (['pause', 'resume', 'cancel'].indexOf(action) === -1) {
+      return next(
+        errors.badRequest('Action Must Be One Of: Pause, Resume, Or Cancel.')
+      );
+    }
+
+    const sub = await subscriptionModel.findById(subscriptionId);
+    if (!sub) {
+      return next(errors.notFound('Subscription Not Found.'));
+    }
+    if (sub.user_id !== req.user.id) {
+      return next(
+        errors.forbidden('You May Only Manage Your Own Subscriptions.')
+      );
+    }
+
+    let updated = null;
+    let event = null;
+    if (action === 'pause') {
+      updated = await subscriptionModel.pause(subscriptionId);
+      event = 'paused';
+      if (!updated) {
+        return next(
+          errors.conflict('Only An Active Subscription Can Be Paused.')
+        );
+      }
+    } else if (action === 'resume') {
+      updated = await subscriptionModel.resume(subscriptionId);
+      event = 'resumed';
+      if (!updated) {
+        return next(
+          errors.conflict('Only A Paused Subscription Can Be Resumed.')
+        );
+      }
+    } else {
+      updated = await subscriptionModel.cancel(subscriptionId);
+      event = 'canceled';
+      if (!updated) {
+        return next(
+          errors.conflict('Subscription Is Already Canceled Or Expired.')
+        );
+      }
+    }
+
+    await recordSubscriptionChange(req, sub, updated, event);
+
+    res.status(200).json({ subscription: updated });
   } catch (err) {
     next(err);
   }
@@ -245,6 +353,7 @@ async function updateNotificationPreferences(req, res, next) {
 module.exports = {
   dashboard: dashboard,
   cancelSubscription: cancelSubscription,
+  patchSubscription: patchSubscription,
   updateAddress: updateAddress,
   setDefaultAddress: setDefaultAddress,
   deleteAddress: deleteAddress,

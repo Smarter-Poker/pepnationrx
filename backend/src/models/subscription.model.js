@@ -15,26 +15,31 @@ const COLUMNS =
   'id, user_id, protocol_category, plan_name, status, stripe_subscription_id, ' +
   'mrr_cents, currency, refill_count, refills_remaining, current_period_start, ' +
   'current_period_end, next_billing_date, affiliate_id, ' +
+  'treatment_plan_id, intake_submission_id, ' +
   'started_at, paused_at, canceled_at, created_at, updated_at';
-  // Note: treatment_plan_id and intake_submission_id are not yet in the DB
-  // schema. Add them via migration before selecting them here.
+  // treatment_plan_id links the subscription to the catalog plan purchased;
+  // intake_submission_id links it to the clinical intake that preceded it,
+  // completing the intake -> subscription audit trail (migration 0007, W-05).
 
 // Subscription statuses that count as live revenue.
 const ACTIVE_STATUSES = ['trialing', 'active', 'past_due'];
 
 // Create a subscription. Checkout creates the row in 'pending_clinical_review':
 // a recurring protocol is not live revenue until a licensed provider has
-// reviewed the patient's intake. mrr_cents is the per-month price; affiliateId
-// and treatmentPlanId are optional. status defaults to 'pending_clinical_review'
-// and may be overridden only with another subscription_status enum value. An
-// optional `client` runs the insert inside an open transaction (checkout pairs
-// it with the consent, address, and transaction inserts as one unit).
+// reviewed the patient's intake. mrr_cents is the per-month price; affiliateId,
+// treatmentPlanId, and intakeSubmissionId are optional. treatmentPlanId and
+// intakeSubmissionId record the catalog plan purchased and the clinical intake
+// that preceded the subscription, completing the audit trail. status defaults
+// to 'pending_clinical_review'. An optional `client` runs the insert inside an
+// open transaction (checkout pairs it with the consent, address, and
+// transaction inserts as one unit).
 async function create(data, client) {
   return queryOne(
     'INSERT INTO subscriptions ' +
       '(user_id, protocol_category, plan_name, status, mrr_cents, currency, ' +
-      ' refill_count, refills_remaining, next_billing_date, affiliate_id) ' +
-      'VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) ' +
+      ' refill_count, refills_remaining, next_billing_date, affiliate_id, ' +
+      ' treatment_plan_id, intake_submission_id) ' +
+      'VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) ' +
       'RETURNING ' + COLUMNS,
     [
       data.userId,
@@ -47,6 +52,8 @@ async function create(data, client) {
       Number.isInteger(data.refillsRemaining) ? data.refillsRemaining : 0,
       data.nextBillingDate || null,
       data.affiliateId || null,
+      data.treatmentPlanId || null,
+      data.intakeSubmissionId || null,
     ],
     client
   );
@@ -140,8 +147,42 @@ async function cancel(subscriptionId, client) {
   );
 }
 
+// Subscription statuses a patient is allowed to pause from. A subscription is
+// only pausable while it is genuinely live; pausing a past_due, canceled, or
+// already-paused subscription makes no sense and is rejected by the caller.
+const PAUSABLE_STATUSES = ['trialing', 'active'];
+
+// Pause a subscription. Acts only on a pausable subscription so the call is
+// idempotent: a re-run on an already-paused row returns null. An optional
+// `client` runs the update inside an open transaction.
+async function pause(subscriptionId, client) {
+  return queryOne(
+    "UPDATE subscriptions SET status = 'paused', paused_at = now(), " +
+      'updated_at = now() ' +
+      'WHERE id = $1 AND status = ANY($2) ' +
+      'RETURNING ' + COLUMNS,
+    [subscriptionId, PAUSABLE_STATUSES],
+    client
+  );
+}
+
+// Resume a paused subscription back to active and clear paused_at. Acts only
+// on a paused row, so a re-run returns null. An optional `client` runs the
+// update inside an open transaction.
+async function resume(subscriptionId, client) {
+  return queryOne(
+    "UPDATE subscriptions SET status = 'active', paused_at = NULL, " +
+      'updated_at = now() ' +
+      "WHERE id = $1 AND status = 'paused' " +
+      'RETURNING ' + COLUMNS,
+    [subscriptionId],
+    client
+  );
+}
+
 module.exports = {
   ACTIVE_STATUSES: ACTIVE_STATUSES,
+  PAUSABLE_STATUSES: PAUSABLE_STATUSES,
   create: create,
   findById: findById,
   findByUserId: findByUserId,
@@ -152,4 +193,6 @@ module.exports = {
   advanceBillingDate: advanceBillingDate,
   markPastDue: markPastDue,
   cancel: cancel,
+  pause: pause,
+  resume: resume,
 };

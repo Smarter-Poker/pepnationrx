@@ -30,6 +30,15 @@ async function findById(id) {
   return queryOne('SELECT ' + COLUMNS + ' FROM providers WHERE id = $1', [id]);
 }
 
+// Find the provider record linked to an authenticated provider-role user.
+// Returns null when the user has no provider profile.
+async function findByUserId(userId) {
+  return queryOne(
+    'SELECT ' + COLUMNS + ' FROM providers WHERE user_id = $1',
+    [userId]
+  );
+}
+
 // Resolve a provider by external id, inserting a local record if none exists.
 // The unique constraint on external_provider_id makes the upsert race-safe.
 // An optional `client` runs both the SELECT and INSERT on the same transaction
@@ -57,5 +66,6 @@ async function findOrCreateByExternalId(data, client) {
 module.exports = {
   findByExternalId: findByExternalId,
   findById: findById,
+  findByUserId: findByUserId,
   findOrCreateByExternalId: findOrCreateByExternalId,
 };

@@ -17,7 +17,11 @@
 
 import { PnrxComponent, escapeHtml } from '../core/component.js';
 import { ApiError } from '../services/api.js';
-import { placeCheckout, CHECKOUT_CONSENT_VERSION } from '../services/checkout.service.js';
+import {
+  placeCheckout,
+  validateCoupon,
+  CHECKOUT_CONSENT_VERSION,
+} from '../services/checkout.service.js';
 
 // The MSO billing-agent disclosure. Kept identical to the text in the backend
 // constants module and ARCHITECTURE.md Section V.
@@ -41,6 +45,64 @@ function formatPrice(cents) {
   return '$' + (Math.round(cents) / 100).toFixed(2);
 }
 
+// All 50 US states plus DC for the shipping-state dropdown.
+const US_STATES = [
+  { value: 'AL', label: 'Alabama' },
+  { value: 'AK', label: 'Alaska' },
+  { value: 'AZ', label: 'Arizona' },
+  { value: 'AR', label: 'Arkansas' },
+  { value: 'CA', label: 'California' },
+  { value: 'CO', label: 'Colorado' },
+  { value: 'CT', label: 'Connecticut' },
+  { value: 'DE', label: 'Delaware' },
+  { value: 'DC', label: 'District Of Columbia' },
+  { value: 'FL', label: 'Florida' },
+  { value: 'GA', label: 'Georgia' },
+  { value: 'HI', label: 'Hawaii' },
+  { value: 'ID', label: 'Idaho' },
+  { value: 'IL', label: 'Illinois' },
+  { value: 'IN', label: 'Indiana' },
+  { value: 'IA', label: 'Iowa' },
+  { value: 'KS', label: 'Kansas' },
+  { value: 'KY', label: 'Kentucky' },
+  { value: 'LA', label: 'Louisiana' },
+  { value: 'ME', label: 'Maine' },
+  { value: 'MD', label: 'Maryland' },
+  { value: 'MA', label: 'Massachusetts' },
+  { value: 'MI', label: 'Michigan' },
+  { value: 'MN', label: 'Minnesota' },
+  { value: 'MS', label: 'Mississippi' },
+  { value: 'MO', label: 'Missouri' },
+  { value: 'MT', label: 'Montana' },
+  { value: 'NE', label: 'Nebraska' },
+  { value: 'NV', label: 'Nevada' },
+  { value: 'NH', label: 'New Hampshire' },
+  { value: 'NJ', label: 'New Jersey' },
+  { value: 'NM', label: 'New Mexico' },
+  { value: 'NY', label: 'New York' },
+  { value: 'NC', label: 'North Carolina' },
+  { value: 'ND', label: 'North Dakota' },
+  { value: 'OH', label: 'Ohio' },
+  { value: 'OK', label: 'Oklahoma' },
+  { value: 'OR', label: 'Oregon' },
+  { value: 'PA', label: 'Pennsylvania' },
+  { value: 'RI', label: 'Rhode Island' },
+  { value: 'SC', label: 'South Carolina' },
+  { value: 'SD', label: 'South Dakota' },
+  { value: 'TN', label: 'Tennessee' },
+  { value: 'TX', label: 'Texas' },
+  { value: 'UT', label: 'Utah' },
+  { value: 'VT', label: 'Vermont' },
+  { value: 'VA', label: 'Virginia' },
+  { value: 'WA', label: 'Washington' },
+  { value: 'WV', label: 'West Virginia' },
+  { value: 'WI', label: 'Wisconsin' },
+  { value: 'WY', label: 'Wyoming' },
+];
+
+// 5-digit US zip code (with optional +4).
+const ZIP_RE = /^\d{5}(-\d{4})?$/;
+
 export class PnrxCheckout extends PnrxComponent {
   constructor() {
     super();
@@ -55,6 +117,12 @@ export class PnrxCheckout extends PnrxComponent {
       postalCode: '',
       // Optional referral.
       affiliateCode: '',
+      // Coupon code entry. couponStatus is idle | checking | applied | error;
+      // appliedCoupon holds the validated coupon terms once a code is applied.
+      couponInput: '',
+      couponStatus: 'idle',
+      couponMessage: '',
+      appliedCoupon: null,
       // Consent checkbox states.
       consentMso: false,
       consentTelehealth: false,
@@ -72,6 +140,10 @@ export class PnrxCheckout extends PnrxComponent {
     this.setState({
       config: config || null,
       affiliateCode: (config && config.affiliateCode) || '',
+      couponInput: '',
+      couponStatus: 'idle',
+      couponMessage: '',
+      appliedCoupon: null,
       error: null,
       result: null,
     });
@@ -82,7 +154,31 @@ export class PnrxCheckout extends PnrxComponent {
   grossCents() {
     const c = this.state.config;
     if (!c) return 0;
-    return c.pricePerMonthCents * c.cadenceMonths;
+    // Guard against null/undefined fields that would produce NaN in the UI.
+    return (c.pricePerMonthCents || 0) * (c.cadenceMonths || 1);
+  }
+
+  // The previewed discount for the applied coupon, in cents. This mirrors the
+  // backend coupon math for display; the authoritative discount is recomputed
+  // server-side at checkout and returned in the result pricing block.
+  discountCents() {
+    const c = this.state.appliedCoupon;
+    if (!c || this.state.couponStatus !== 'applied') return 0;
+    const gross = this.grossCents();
+    if (gross <= 0) return 0;
+    let d;
+    if (c.type === 'percent') {
+      d = Math.round((gross * Number(c.value)) / 100);
+    } else {
+      d = Math.round(Number(c.value) || 0);
+    }
+    if (!Number.isFinite(d) || d <= 0) return 0;
+    return Math.min(d, gross);
+  }
+
+  // The amount due today: the gross less any previewed coupon discount.
+  totalCents() {
+    return Math.max(0, this.grossCents() - this.discountCents());
   }
 
   addressComplete() {
@@ -90,8 +186,8 @@ export class PnrxCheckout extends PnrxComponent {
     return (
       s.line1.trim() !== '' &&
       s.city.trim() !== '' &&
-      s.addrState.trim().length === 2 &&
-      s.postalCode.trim() !== ''
+      s.addrState.length === 2 &&
+      ZIP_RE.test(s.postalCode.trim())
     );
   }
 
@@ -115,16 +211,18 @@ export class PnrxCheckout extends PnrxComponent {
 
     const order = {
       protocolCategory: c.protocolCategory,
-      planName: c.planName,
-      cadenceMonths: c.cadenceMonths,
-      pricePerMonthCents: c.pricePerMonthCents,
       treatmentSlug: c.treatmentSlug || undefined,
+      cadenceMonths: c.cadenceMonths,
       affiliateCode: s.affiliateCode.trim() || undefined,
+      couponCode:
+        s.appliedCoupon && s.couponStatus === 'applied'
+          ? s.appliedCoupon.code
+          : undefined,
       shippingAddress: {
         line1: s.line1.trim(),
         line2: s.line2.trim() || undefined,
         city: s.city.trim(),
-        state: s.addrState.trim().toUpperCase(),
+        state: s.addrState.toUpperCase(),
         postalCode: s.postalCode.trim(),
         country: 'US',
       },
@@ -141,6 +239,9 @@ export class PnrxCheckout extends PnrxComponent {
         },
       ],
     };
+    // Forward the intake submission id so the backend can link this order
+    // to the patient's clinical intake record.
+    if (c.intakeSubmissionId) order.intakeSubmissionId = c.intakeSubmissionId;
 
     try {
       const result = await placeCheckout(order);
@@ -154,6 +255,53 @@ export class PnrxCheckout extends PnrxComponent {
       this.setState({ submitting: false, error: message });
       this.emit('checkout:error', { message: message });
     }
+  }
+
+  // -- Coupon ----------------------------------------------------------------
+
+  // Validate the entered coupon code against the backend. On success the
+  // discount terms are stored and previewed in the order summary; on failure
+  // the reason the code cannot be used is shown.
+  async applyCoupon() {
+    const code = this.state.couponInput.trim();
+    if (code === '' || this.state.couponStatus === 'checking') return;
+    this.setState({ couponStatus: 'checking', couponMessage: '' });
+    try {
+      const res = await validateCoupon(code);
+      const coupon = res && res.coupon ? res.coupon : null;
+      if (!coupon) {
+        this.setState({
+          couponStatus: 'error',
+          couponMessage: 'That Coupon Code Could Not Be Applied.',
+          appliedCoupon: null,
+        });
+        return;
+      }
+      this.setState({
+        couponStatus: 'applied',
+        couponMessage: '',
+        appliedCoupon: coupon,
+      });
+    } catch (err) {
+      this.setState({
+        couponStatus: 'error',
+        couponMessage:
+          err instanceof ApiError
+            ? err.message
+            : 'That Coupon Code Could Not Be Applied.',
+        appliedCoupon: null,
+      });
+    }
+  }
+
+  // Clear the applied coupon and return to the empty code field.
+  removeCoupon() {
+    this.setState({
+      couponInput: '',
+      couponStatus: 'idle',
+      couponMessage: '',
+      appliedCoupon: null,
+    });
   }
 
   // -- Rendering -------------------------------------------------------------
@@ -220,10 +368,17 @@ export class PnrxCheckout extends PnrxComponent {
       formatPrice(c.pricePerMonthCents) +
       '</strong>' +
       '</div>' +
+      '<div class="pnrx-checkout__line">' +
+      '<span>Subtotal</span>' +
+      '<strong>' +
+      formatPrice(gross) +
+      '</strong>' +
+      '</div>' +
+      this.renderCoupon() +
       '<div class="pnrx-checkout__line pnrx-checkout__line--total">' +
       '<span>Total Today</span>' +
       '<strong>' +
-      formatPrice(gross) +
+      formatPrice(this.totalCents()) +
       '</strong>' +
       '</div>' +
       '<p class="pnrx-checkout__note">' +
@@ -260,8 +415,64 @@ export class PnrxCheckout extends PnrxComponent {
     );
   }
 
+  // The coupon row inside the order summary: an applied-coupon discount line
+  // with a remove control, or the code-entry field when none is applied.
+  renderCoupon() {
+    const s = this.state;
+    if (s.appliedCoupon && s.couponStatus === 'applied') {
+      return (
+        '<div class="pnrx-checkout__line pnrx-checkout__line--discount">' +
+        '<span>Coupon ' +
+        escapeHtml(s.appliedCoupon.code) +
+        '</span>' +
+        '<strong>-' +
+        formatPrice(this.discountCents()) +
+        '</strong>' +
+        '</div>' +
+        '<button type="button" class="pnrx-checkout__coupon-remove" ' +
+        'data-action="remove-coupon">Remove Coupon</button>'
+      );
+    }
+    const checking = s.couponStatus === 'checking';
+    const message =
+      s.couponMessage !== ''
+        ? '<p class="pnrx-checkout__coupon-msg" role="alert">' +
+          escapeHtml(s.couponMessage) +
+          '</p>'
+        : '';
+    return (
+      '<div class="pnrx-checkout__coupon">' +
+      '<label class="pnrx-checkout__coupon-label" for="pnrx-coupon">' +
+      'Have A Coupon Code?</label>' +
+      '<div class="pnrx-checkout__coupon-row">' +
+      '<input id="pnrx-coupon" type="text" data-field="couponInput" ' +
+      'placeholder="Enter Code" value="' +
+      escapeHtml(s.couponInput) +
+      '" />' +
+      '<button type="button" class="pnrx-checkout__coupon-apply" ' +
+      'data-action="apply-coupon"' +
+      (checking ? ' disabled' : '') +
+      '>' +
+      (checking ? 'Checking' : 'Apply') +
+      '</button>' +
+      '</div>' +
+      message +
+      '</div>'
+    );
+  }
+
   renderAddressForm() {
     const s = this.state;
+    const stateOptions =
+      '<option value=""' + (s.addrState === '' ? ' selected' : '') + ' disabled>Select State</option>' +
+      US_STATES.map(function (st) {
+        return '<option value="' + st.value + '"' +
+          (s.addrState === st.value ? ' selected' : '') + '>' +
+          st.label + '</option>';
+      }).join('');
+    const zipError = s.postalCode.trim() !== '' && !ZIP_RE.test(s.postalCode.trim())
+      ? '<p class="pnrx-checkout__field-error">Please Enter A Valid 5-Digit ZIP Code.</p>'
+      : '';
     return (
       '<section class="pnrx-checkout__section">' +
       '<h3 class="pnrx-checkout__subhead">Shipping Address</h3>' +
@@ -285,13 +496,16 @@ export class PnrxCheckout extends PnrxComponent {
       '</div>' +
       '<div class="pnrx-checkout__field pnrx-checkout__field--state">' +
       '<label for="pnrx-state">State</label>' +
-      '<input id="pnrx-state" type="text" data-field="addrState" maxlength="2" ' +
-      'value="' + escapeHtml(s.addrState) + '" autocomplete="address-level1" />' +
+      '<select id="pnrx-state" class="pnrx-checkout__select" data-select="addrState" autocomplete="address-level1">' +
+      stateOptions +
+      '</select>' +
       '</div>' +
       '<div class="pnrx-checkout__field pnrx-checkout__field--zip">' +
-      '<label for="pnrx-zip">Postal Code</label>' +
+      '<label for="pnrx-zip">ZIP Code</label>' +
       '<input id="pnrx-zip" type="text" data-field="postalCode" ' +
-      'value="' + escapeHtml(s.postalCode) + '" autocomplete="postal-code" />' +
+      'value="' + escapeHtml(s.postalCode) + '" autocomplete="postal-code" ' +
+      'maxlength="10" inputmode="numeric" />' +
+      zipError +
       '</div>' +
       '</div>' +
       '<div class="pnrx-checkout__field">' +
@@ -351,13 +565,36 @@ export class PnrxCheckout extends PnrxComponent {
   afterRender() {
     const self = this;
 
+    // Text inputs: mutate state directly without re-rendering on every
+    // keystroke. Re-rendering on each input event replaces innerHTML and
+    // destroys focus, making all form fields unusable (only one character
+    // could be typed before focus was lost). We only need to refresh the
+    // submit button's disabled state after each change.
     this.$$('[data-field]').forEach(function (input) {
       input.addEventListener('input', function () {
-        const patch = {};
-        patch[input.getAttribute('data-field')] = input.value;
-        self.setState(patch);
+        // Direct mutation: safe here because we are immediately syncing
+        // the DOM value back to state without triggering a render cycle.
+        self.state[input.getAttribute('data-field')] = input.value;
+        // Refresh the submit button enabled state without a full re-render.
+        var btn = self.$('[data-action="submit"]');
+        if (btn) {
+          if (self.canSubmit()) {
+            btn.removeAttribute('disabled');
+          } else {
+            btn.setAttribute('disabled', '');
+          }
+        }
       });
     });
+
+    // State dropdown — uses data-select instead of data-field to avoid the
+    // generic input handler attempting to bind to a <select>.
+    const stateSelect = this.$('[data-select="addrState"]');
+    if (stateSelect) {
+      stateSelect.addEventListener('change', function () {
+        self.setState({ addrState: stateSelect.value });
+      });
+    }
 
     const mso = this.$('[data-consent="mso"]');
     if (mso) {
@@ -377,6 +614,20 @@ export class PnrxCheckout extends PnrxComponent {
     if (submit) {
       submit.addEventListener('click', function () {
         self.submit();
+      });
+    }
+
+    const applyCoupon = this.$('[data-action="apply-coupon"]');
+    if (applyCoupon) {
+      applyCoupon.addEventListener('click', function () {
+        self.applyCoupon();
+      });
+    }
+
+    const removeCoupon = this.$('[data-action="remove-coupon"]');
+    if (removeCoupon) {
+      removeCoupon.addEventListener('click', function () {
+        self.removeCoupon();
       });
     }
   }
