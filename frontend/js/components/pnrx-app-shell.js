@@ -20,6 +20,7 @@ import { restoreSession, logout } from '../services/auth.service.js';
 import { submitIntake } from '../services/intake.service.js';
 import { showToast } from '../utils/toast.js';
 import { configureApi } from '../services/api.js';
+import { escapeHtml } from '../core/component.js';
 
 // Note: The full MSO billing-agent disclosure lives in pnrx-checkout.js
 // where the patient actively acknowledges it before placing an order.
@@ -400,7 +401,7 @@ export class PnrxAppShell extends HTMLElement {
     if (isAuthenticated()) {
       const user = getUser();
       const label =
-        user && user.first_name ? 'Hello, ' + user.first_name : 'My Dashboard';
+        user && user.first_name ? 'Hello, ' + escapeHtml(user.first_name) : 'My Dashboard';
       links.push('<a class="pnrx-shell__link" href="#/dashboard">' + label + '</a>');
       // Secure messaging is a patient-facing surface; staff use the provider
       // tools, not this nav link.
