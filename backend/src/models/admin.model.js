@@ -72,7 +72,7 @@ async function recentAuditLog(limit) {
   const cap = Number.isInteger(limit) && limit > 0 ? Math.min(limit, 500) : 50;
   const result = await query(
     'SELECT id, actor_user_id, actor_role, action, entity_type, entity_id, ' +
-      'phi_accessed, ip_address, occurred_at FROM audit_log ' +
+      'phi_accessed, ip_address, user_agent, metadata, occurred_at FROM audit_log ' +
       'ORDER BY occurred_at DESC LIMIT $1',
     [cap]
   );

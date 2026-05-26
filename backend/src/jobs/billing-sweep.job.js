@@ -65,10 +65,14 @@ async function run() {
       // billing date, so a re-run within the same cycle never emails twice,
       // and the next cycle (a new date) sends a fresh reminder.
       const renewalIso = dateOnlyIso(new Date(sub.next_billing_date));
+      // Format mrr_cents as a dollar string for the email body (e.g. "$149.00").
+      const amountDisplay = sub.mrr_cents != null
+        ? '$' + (sub.mrr_cents / 100).toFixed(2)
+        : '';
       const sent = await notificationService.send({
         userId: sub.user_id,
         template: 'billing_renewal',
-        payload: { planName: sub.plan_name, renewalDate: renewalIso },
+        payload: { planName: sub.plan_name, renewalDate: renewalIso, amount: amountDisplay },
         dedupeKey: 'billing-renewal:' + sub.id + ':' + renewalIso,
       });
       if (sent && sent.ok && !sent.duplicate && !sent.skipped) {

@@ -16,8 +16,8 @@ export function fetchAdminDashboard() {
   return api.get('/api/admin/dashboard');
 }
 
-// Fetch the recent audit-log entries. `limit` is optional and capped at 200
-// server-side.
+// Fetch the recent audit-log entries. `limit` is optional and capped at 500
+// server-side (admin.model.recentAuditLog enforces Math.min(limit, 500)).
 export function fetchAuditLog(limit) {
   const suffix =
     Number.isInteger(limit) && limit > 0 ? '?limit=' + limit : '';
