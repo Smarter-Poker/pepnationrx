@@ -18,6 +18,7 @@ function v(payload, key, fallback) {
 }
 
 const TEMPLATES = {
+  // Sent to a patient whose intake was reviewed and a prescription was signed.
   prescription_signed: {
     subject: function () {
       return 'Your Prescription Has Been Reviewed';
@@ -28,6 +29,26 @@ const TEMPLATES = {
         'A licensed provider has reviewed your intake for ' +
         v(p, 'treatmentName', 'your treatment') + '. Sign in to your ' +
         'PepNationRX dashboard to see the decision and next steps.\n\n' +
+        'PepNationRX'
+      );
+    },
+  },
+
+  // Sent to a patient whose intake was reviewed but NOT approved (denied or
+  // needs_more_info). Using prescription_signed for these outcomes was wrong:
+  // the subject "Your Prescription Has Been Reviewed" implies a script was
+  // written, which is factually incorrect for a denial. This template is
+  // factually neutral and directs the patient to the dashboard for details.
+  intake_reviewed: {
+    subject: function () {
+      return 'An Update On Your PepNationRX Intake';
+    },
+    text: function (p) {
+      return (
+        'Hello ' + v(p, 'firstName', 'there') + ',\n\n' +
+        'A licensed provider has completed their review of your clinical intake. ' +
+        'Sign in to your PepNationRX dashboard to see the outcome and any next steps ' +
+        'required.\n\n' +
         'PepNationRX'
       );
     },

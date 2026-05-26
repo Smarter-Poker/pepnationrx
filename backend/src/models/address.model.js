@@ -10,6 +10,7 @@
 
 const { query, queryOne } = require('../db/query');
 
+
 const COLUMNS =
   'id, user_id, address_type, line1, line2, city, state, postal_code, ' +
   'country, is_default, created_at, updated_at';
@@ -86,11 +87,20 @@ async function update(id, data, client) {
 // addresses first, then sets it on the target row inside one client session
 // so callers inside a transaction can pass their client.
 async function setDefault(id, userId, client) {
-  const db = client || require('../db/query');
   // Step 1: strip the default flag from every address this user owns.
-  await (client
-    ? client.query('UPDATE addresses SET is_default = false WHERE user_id = $1', [userId])
-    : db.query('UPDATE addresses SET is_default = false WHERE user_id = $1', [userId]));
+  // When a client is supplied the update runs inside the open transaction;
+  // otherwise it uses the global pool.
+  if (client) {
+    await client.query(
+      'UPDATE addresses SET is_default = false WHERE user_id = $1',
+      [userId]
+    );
+  } else {
+    await query(
+      'UPDATE addresses SET is_default = false WHERE user_id = $1',
+      [userId]
+    );
+  }
   // Step 2: set the flag on the target address (must belong to the user).
   return queryOne(
     'UPDATE addresses SET is_default = true, updated_at = now() ' +

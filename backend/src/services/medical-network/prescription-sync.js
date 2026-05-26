@@ -222,9 +222,13 @@ async function applyReviewDecision(payload) {
 
   // Tell the patient a decision has been reached on their intake. The dedupe
   // key ties the email to this submission, so a webhook replay is a no-op.
+  // F3-01: use 'intake_reviewed' (not 'prescription_signed'): a denied or
+  // needs_more_info decision did NOT produce a prescription. Sending the
+  // prescription_signed template to a denied patient is factually wrong and
+  // could mislead them into believing a script was written.
   await notificationService.send({
     userId: submission.user_id,
-    template: 'prescription_signed',
+    template: 'intake_reviewed',
     payload: {},
     dedupeKey: 'intake-reviewed:' + submission.id,
   });
