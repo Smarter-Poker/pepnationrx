@@ -135,7 +135,13 @@ async function createCoupon(req, res, next) {
 // the update schema and the model both omit them.
 async function updateCoupon(req, res, next) {
   try {
-    const updated = await couponModel.update(req.params.couponId, req.body);
+    const { couponId } = req.params;
+    // S3-03: validate the couponId is a proper UUID before passing to pg;
+    // a malformed value causes a pg parse error (unhandled 500), not a 404.
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(couponId)) {
+      return next(errors.notFound('Coupon Not Found.'));
+    }
+    const updated = await couponModel.update(couponId, req.body);
     if (!updated) {
       return next(errors.notFound('Coupon Not Found.'));
     }

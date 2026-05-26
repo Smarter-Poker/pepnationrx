@@ -139,7 +139,7 @@ async function cancelSubscription(req, res, next) {
       return next(errors.forbidden('You May Only Cancel Your Own Subscriptions.'));
     }
 
-    const result = await subscriptionModel.cancel(subscriptionId);
+    const result = await subscriptionModel.cancel(subscriptionId, null, req.user.id);
     if (!result) {
       return next(errors.conflict('Subscription Is Already Canceled Or Expired.'));
     }
@@ -184,7 +184,7 @@ async function patchSubscription(req, res, next) {
     let updated = null;
     let event = null;
     if (action === 'pause') {
-      updated = await subscriptionModel.pause(subscriptionId);
+      updated = await subscriptionModel.pause(subscriptionId, null, req.user.id);
       event = 'paused';
       if (!updated) {
         return next(
@@ -192,7 +192,7 @@ async function patchSubscription(req, res, next) {
         );
       }
     } else if (action === 'resume') {
-      updated = await subscriptionModel.resume(subscriptionId);
+      updated = await subscriptionModel.resume(subscriptionId, null, req.user.id);
       event = 'resumed';
       if (!updated) {
         return next(
@@ -200,7 +200,7 @@ async function patchSubscription(req, res, next) {
         );
       }
     } else {
-      updated = await subscriptionModel.cancel(subscriptionId);
+      updated = await subscriptionModel.cancel(subscriptionId, null, req.user.id);
       event = 'canceled';
       if (!updated) {
         return next(

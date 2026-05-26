@@ -135,14 +135,19 @@ async function markPastDue(id) {
   );
 }
 
-// Cancel a subscription. A no-op (returns null) when the subscription is
-// already canceled or expired, letting the caller decide how to surface that.
-async function cancel(subscriptionId, client) {
+// Cancel a subscription. An optional userId enforces ownership in SQL
+// (defense-in-depth for the patient path); omit it for admin cancellations.
+// A no-op (returns null) when the subscription is already canceled or expired,
+// letting the caller decide how to surface that.
+async function cancel(subscriptionId, client, userId) {
+  const params = ['canceled', subscriptionId, 'canceled', 'expired'];
+  const ownerClause = userId ? ' AND user_id = $5' : '';
+  if (userId) params.push(userId);
   return queryOne(
     'UPDATE subscriptions SET status = $1, canceled_at = now(), updated_at = now() ' +
-      'WHERE id = $2 AND status NOT IN ($3, $4) ' +
+      'WHERE id = $2 AND status NOT IN ($3, $4)' + ownerClause + ' ' +
       'RETURNING ' + COLUMNS,
-    ['canceled', subscriptionId, 'canceled', 'expired'],
+    params,
     client
   );
 }
@@ -152,30 +157,38 @@ async function cancel(subscriptionId, client) {
 // already-paused subscription makes no sense and is rejected by the caller.
 const PAUSABLE_STATUSES = ['trialing', 'active'];
 
-// Pause a subscription. Acts only on a pausable subscription so the call is
-// idempotent: a re-run on an already-paused row returns null. An optional
-// `client` runs the update inside an open transaction.
-async function pause(subscriptionId, client) {
+// Pause a subscription. An optional userId enforces ownership in SQL for the
+// patient path. Acts only on a pausable subscription so the call is idempotent:
+// a re-run on an already-paused row returns null. An optional `client` runs
+// the update inside an open transaction.
+async function pause(subscriptionId, client, userId) {
+  const params = [subscriptionId, PAUSABLE_STATUSES];
+  const ownerClause = userId ? ' AND user_id = $3' : '';
+  if (userId) params.push(userId);
   return queryOne(
     "UPDATE subscriptions SET status = 'paused', paused_at = now(), " +
       'updated_at = now() ' +
-      'WHERE id = $1 AND status = ANY($2) ' +
+      'WHERE id = $1 AND status = ANY($2)' + ownerClause + ' ' +
       'RETURNING ' + COLUMNS,
-    [subscriptionId, PAUSABLE_STATUSES],
+    params,
     client
   );
 }
 
-// Resume a paused subscription back to active and clear paused_at. Acts only
-// on a paused row, so a re-run returns null. An optional `client` runs the
-// update inside an open transaction.
-async function resume(subscriptionId, client) {
+// Resume a paused subscription back to active and clear paused_at. An optional
+// userId enforces ownership in SQL for the patient path. Acts only on a paused
+// row, so a re-run returns null. An optional `client` runs the update inside
+// an open transaction.
+async function resume(subscriptionId, client, userId) {
+  const params = [subscriptionId];
+  const ownerClause = userId ? ' AND user_id = $2' : '';
+  if (userId) params.push(userId);
   return queryOne(
     "UPDATE subscriptions SET status = 'active', paused_at = NULL, " +
       'updated_at = now() ' +
-      "WHERE id = $1 AND status = 'paused' " +
+      "WHERE id = $1 AND status = 'paused'" + ownerClause + ' ' +
       'RETURNING ' + COLUMNS,
-    [subscriptionId],
+    params,
     client
   );
 }
