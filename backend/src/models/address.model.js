@@ -57,13 +57,16 @@ async function findByUserId(userId) {
   return result.rows;
 }
 
-// Update mutable fields on an address row.
+// Update mutable fields on an address row. The userId parameter is required:
+// ownership is enforced in SQL (WHERE id = $7 AND user_id = $8) so this
+// function is safe to call without a separate ownership pre-check — it returns
+// null when the address does not belong to the caller. (S3-04)
 async function update(id, data, client) {
   return queryOne(
     'UPDATE addresses ' +
       'SET line1 = $1, line2 = $2, city = $3, state = $4, postal_code = $5, ' +
       '    country = $6, updated_at = now() ' +
-      'WHERE id = $7 ' +
+      'WHERE id = $7 AND user_id = $8 ' +
       'RETURNING ' + COLUMNS,
     [
       data.line1,
@@ -73,6 +76,7 @@ async function update(id, data, client) {
       data.postalCode,
       data.country || 'US',
       id,
+      data.userId,
     ],
     client
   );
@@ -97,11 +101,13 @@ async function setDefault(id, userId, client) {
   );
 }
 
-// Hard-delete an address row. Returns the deleted id so callers can confirm.
-async function remove(id, client) {
+// Hard-delete an address row the named user owns. Passing userId enforces
+// ownership at the SQL layer (S3-08). Returns the deleted id, or null when
+// the row did not exist or did not belong to userId.
+async function remove(id, userId, client) {
   return queryOne(
-    'DELETE FROM addresses WHERE id = $1 RETURNING id',
-    [id],
+    'DELETE FROM addresses WHERE id = $1 AND user_id = $2 RETURNING id',
+    [id, userId],
     client
   );
 }

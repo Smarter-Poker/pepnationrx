@@ -83,22 +83,23 @@ that source of truth.
 
 ---
 
-## 3. Known Outstanding Break (fix before claiming the API is live)
+## 3. The api.pepnationrx.com Subdomain — RESOLVED 2026-05-25
 
-`api.pepnationrx.com` does not exist. Until it is wired, the public API 502s.
+This used to be the outstanding production break. It is now wired and the
+public `/api/*` path works end to end. Kept here so future sessions see the
+shape of the fix when something similar comes up:
 
-To fix it (requires Namecheap DNS access and SSH to Hetzner):
-
-1. Add a DNS A record: `api.pepnationrx.com` -> `5.161.252.33` (Namecheap).
-2. On Hetzner, add an nginx server block for `server_name api.pepnationrx.com`
-   that proxies to `http://127.0.0.1:4000`.
-3. Issue a Let's Encrypt certificate for `api.pepnationrx.com`
-   (`certbot --nginx -d api.pepnationrx.com`).
-4. Verify: `curl https://api.pepnationrx.com/api/health` returns
-   `{"status":"ok"}`, then `curl https://pepnationrx.com/api/health` returns
-   the same (proving the Vercel rewrite works).
-
-Do not report the backend as "published" until step 4 passes.
+- DNS: A record `api.pepnationrx.com` -> `5.161.252.33` (Namecheap, Automatic
+  TTL).
+- Hetzner: dedicated nginx server file at `/etc/nginx/sites-available/api.pepnationrx.com`
+  (symlinked into `sites-enabled`) — `server_name api.pepnationrx.com`, proxies
+  all paths to `http://127.0.0.1:4000`.
+- TLS: Let's Encrypt certificate issued via
+  `certbot --nginx -d api.pepnationrx.com --non-interactive --redirect`,
+  renewing automatically. Cert at `/etc/letsencrypt/live/api.pepnationrx.com/`.
+- Verification, all 200: `https://api.pepnationrx.com/api/health`,
+  `https://pepnationrx.com/api/health` (Vercel rewrite), and
+  `https://www.pepnationrx.com/api/health`.
 
 ---
 
@@ -206,7 +207,7 @@ checked:
 | Frontend publish | git push to `main` -> Vercel auto-deploy                |
 | Backend host     | Hetzner `5.161.252.33`, systemd service `pepnationrx`, Node on :4000 |
 | Backend publish  | SSH deploy to `/opt/pepnationrx/backend` + restart      |
-| API subdomain    | api.pepnationrx.com (NOT YET WIRED - see Section 3)     |
+| API subdomain    | https://api.pepnationrx.com (live with TLS, proxies to :4000) |
 | Database         | Supabase project `cupnhfdwveouenutnveg`                 |
 | GitHub repo      | Smarter-Poker/PepNationLab, branch `main`, `pepnationrx/` subdir |
 | SSH key          | `/tmp/pnrx_deploy_key` (chmod 600 before use)           |

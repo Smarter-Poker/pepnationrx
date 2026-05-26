@@ -65,9 +65,11 @@ async function openIntakeCount() {
   return row ? row.count : 0;
 }
 
-// The most recent audit-log entries, newest first. limit is capped at 200.
+// The most recent audit-log entries, newest first. The controller caps the
+// caller-supplied limit at 500; this model matches that ceiling so the two
+// never silently diverge and return fewer rows than requested (S3-07).
 async function recentAuditLog(limit) {
-  const cap = Number.isInteger(limit) && limit > 0 ? Math.min(limit, 200) : 50;
+  const cap = Number.isInteger(limit) && limit > 0 ? Math.min(limit, 500) : 50;
   const result = await query(
     'SELECT id, actor_user_id, actor_role, action, entity_type, entity_id, ' +
       'phi_accessed, ip_address, occurred_at FROM audit_log ' +

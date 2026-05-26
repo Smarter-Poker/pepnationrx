@@ -166,6 +166,11 @@ async function schedule(req, res, next) {
       throw errors.forbidden('Admin Access Required.');
     }
     const { payoutId } = req.params;
+    // S3-03: validate that payoutId is a valid UUID before passing to pg;
+    // a malformed value causes a pg parse error (unhandled 500) not a 404.
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(payoutId)) {
+      throw errors.notFound('Payout Not Found Or Not In Pending Status.');
+    }
     const result = await withTransaction(async (client) => {
       return client.query(
         "UPDATE affiliate_payouts SET status = 'scheduled', updated_at = now() " +
@@ -202,6 +207,10 @@ async function markPaid(req, res, next) {
       throw errors.forbidden('Admin Access Required.');
     }
     const { payoutId } = req.params;
+    // S3-03: validate UUID before passing to pg to avoid an unhandled 500.
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(payoutId)) {
+      throw errors.notFound('Payout Not Found Or Already Paid.');
+    }
     const transferId = req.body.stripeTransferId || 'manual';
 
     const result = await withTransaction(async (client) => {

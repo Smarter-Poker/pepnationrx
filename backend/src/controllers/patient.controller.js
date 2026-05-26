@@ -232,6 +232,7 @@ async function updateAddress(req, res, next) {
     }
 
     const row = await addressModel.update(addressId, {
+      userId: req.user.id,
       line1: req.body.line1 !== undefined ? req.body.line1 : addr.line1,
       line2: req.body.line2 !== undefined ? req.body.line2 : addr.line2,
       city: req.body.city !== undefined ? req.body.city : addr.city,
@@ -283,7 +284,7 @@ async function deleteAddress(req, res, next) {
       return next(errors.forbidden('You May Only Delete Your Own Addresses.'));
     }
 
-    await addressModel.remove(addressId);
+    await addressModel.remove(addressId, req.user.id);
 
     res.status(204).end();
   } catch (err) {
