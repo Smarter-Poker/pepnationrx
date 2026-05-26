@@ -3,6 +3,11 @@
   "version": "0.2.0",
   "private": true,
   "description": "PepNationRX telemedicine MSO platform - Node.js / Express API",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Smarter-Software/pepnationrx.git",
+    "directory": "backend"
+  },
   "type": "commonjs",
   "engines": {
     "node": ">=20.0.0"

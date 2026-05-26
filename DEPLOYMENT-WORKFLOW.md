@@ -40,7 +40,7 @@ interchangeable.
 
 - The FRONTEND (`frontend/`, vanilla Web Components, static) is published by
   VERCEL. Vercel auto-deploys on every push to `main` of the GitHub repo
-  `Smarter-Poker/PepNationLab`. Vercel project id `prj_GbrD7FROlzdrcA7PsSbUPN1say50`,
+  `Smarter-Software/pepnationrx`. Vercel project id `prj_GbrD7FROlzdrcA7PsSbUPN1say50`,
   team `team_SVD8r7AOPH065G3usBxVvrBc`.
 - The BACKEND API (`backend/`, Node/Express, a long-lived server) runs on the
   HETZNER box `5.161.252.33`. It cannot run on Vercel: Vercel is serverless and
@@ -105,8 +105,7 @@ shape of the fix when something similar comes up:
 
 ## 4. Push Workflow (getting code into GitHub)
 
-GitHub repo: `Smarter-Poker/PepNationLab`, branch `main`. PepNationRX lives in
-the `pepnationrx/` subdirectory.
+GitHub repo: `Smarter-Software/pepnationrx`, branch `main`.
 
 Rules:
 
@@ -122,7 +121,7 @@ Rules:
 - After pushing, confirm the commit is on `main` on GitHub.
 
 A push to `main` automatically triggers a Vercel production build. That is the
-publish step for the frontend — see Section 5.
+publish step for the frontend -- see Section 5.
 
 ---
 
@@ -209,5 +208,5 @@ checked:
 | Backend publish  | SSH deploy to `/opt/pepnationrx/backend` + restart      |
 | API subdomain    | https://api.pepnationrx.com (live with TLS, proxies to :4000) |
 | Database         | Supabase project `cupnhfdwveouenutnveg`                 |
-| GitHub repo      | Smarter-Poker/PepNationLab, branch `main`, `pepnationrx/` subdir |
+| GitHub repo      | Smarter-Software/pepnationrx, branch `main`                       |
 | SSH key          | `/tmp/pnrx_deploy_key` (chmod 600 before use)           |
