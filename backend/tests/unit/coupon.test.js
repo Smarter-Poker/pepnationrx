@@ -130,3 +130,50 @@ test('coupon_fee_floor_keeps_the_tri_party_split_solvent', function () {
     'fees fit within the floor gross'
   );
 });
+
+// B3-08: createCouponSchema must reject fixed coupons above the 100 000-cent cap.
+test('coupon_validator_schema_rejects_fixed_coupon_above_cap', function () {
+  const { createCouponSchema } = require('../../src/validators/coupon.validator');
+
+  const validFixed = createCouponSchema.safeParse({
+    code: 'TEST50',
+    type: 'fixed',
+    value: 5000, // $50.00 — well within the cap
+  });
+  assert.ok(validFixed.success, 'A fixed coupon within the cap should be accepted');
+
+  const tooLargeFixed = createCouponSchema.safeParse({
+    code: 'BIGDEAL',
+    type: 'fixed',
+    value: 100001, // one cent above the $1,000 cap
+  });
+  assert.ok(!tooLargeFixed.success, 'A fixed coupon above 100000 cents must be rejected');
+
+  // A fixed coupon at exactly the cap boundary must be accepted.
+  const atCapFixed = createCouponSchema.safeParse({
+    code: 'MAX1000',
+    type: 'fixed',
+    value: 100000,
+  });
+  assert.ok(atCapFixed.success, 'A fixed coupon at exactly the cap must be accepted');
+});
+
+// B3-08: percent coupons retain their own 1..100 guard independently.
+test('coupon_validator_schema_rejects_percent_coupon_out_of_range', function () {
+  const { createCouponSchema } = require('../../src/validators/coupon.validator');
+
+  const overHundred = createCouponSchema.safeParse({
+    code: 'OVER100',
+    type: 'percent',
+    value: 101,
+  });
+  assert.ok(!overHundred.success, 'A percent coupon above 100 must be rejected');
+
+  const validPct = createCouponSchema.safeParse({
+    code: 'PCT15',
+    type: 'percent',
+    value: 15,
+  });
+  assert.ok(validPct.success, 'A percent coupon with value 15 must be accepted');
+});
+

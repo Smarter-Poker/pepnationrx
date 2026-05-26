@@ -79,9 +79,19 @@ async function request(req, res, next) {
     }
 
     const now = new Date();
+    // B3-05: validate both dates before passing to the database; an invalid
+    // string would otherwise produce an unhandled pg parse error (500) instead
+    // of a clean 400.
+    const startDate = new Date(periodStart);
     const endDate = new Date(periodEnd);
+    if (isNaN(startDate.getTime())) {
+      throw errors.badRequest('periodStart Is Not A Valid Date.');
+    }
     if (isNaN(endDate.getTime())) {
       throw errors.badRequest('periodEnd Is Not A Valid Date.');
+    }
+    if (startDate >= endDate) {
+      throw errors.badRequest('periodStart Must Be Before periodEnd.');
     }
     if (endDate > now) {
       throw errors.badRequest('Payout Period Has Not Yet Ended.');

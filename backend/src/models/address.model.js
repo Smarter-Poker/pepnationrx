@@ -40,9 +40,11 @@ async function create(data, client) {
   );
 }
 
-// Find an address by primary key.
-async function findById(id) {
-  return queryOne('SELECT ' + COLUMNS + ' FROM addresses WHERE id = $1', [id]);
+// Find an address by primary key. An optional `client` runs the query inside
+// an open transaction (checkout passes its client so the ownership check and
+// the subscription insert commit as one unit, closing the TOCTOU window).
+async function findById(id, client) {
+  return queryOne('SELECT ' + COLUMNS + ' FROM addresses WHERE id = $1', [id], client);
 }
 
 // All addresses for a patient, default first then newest.

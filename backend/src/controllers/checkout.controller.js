@@ -65,7 +65,11 @@ function assertRequiredConsents(submitted) {
 // address supplied inline. Cold-chain pharmacy shipments require one.
 async function resolveShippingAddress(req, input, client) {
   if (input.shippingAddressId) {
-    const existing = await addressModel.findById(input.shippingAddressId);
+    // B3-07: run the ownership lookup inside the open transaction (same client)
+    // so the check and the subscription insert are a single atomic unit —
+    // a concurrent address-delete cannot invalidate the ownership check between
+    // the SELECT here and the INSERT below.
+    const existing = await addressModel.findById(input.shippingAddressId, client);
     if (!existing || existing.user_id !== req.user.id) {
       throw errors.notFound('Shipping address not found.');
     }

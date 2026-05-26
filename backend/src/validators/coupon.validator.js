@@ -28,7 +28,8 @@ const validateCouponSchema = z
   .strict();
 
 // POST /api/admin/coupons - create a coupon. `value` is range-checked against
-// `type`: a percent coupon is 1..100, a fixed coupon is a positive cent amount.
+// `type`: a percent coupon is 1..100, a fixed coupon is a positive cent amount
+// capped at 100 000 cents ($1 000.00) to prevent runaway discounts.
 const createCouponSchema = z
   .object({
     code: couponCode,
@@ -49,6 +50,18 @@ const createCouponSchema = z
     },
     {
       message: 'A percent coupon value must be between 1 and 100.',
+      path: ['value'],
+    }
+  )
+  .refine(
+    function (data) {
+      // B3-08: cap fixed coupon values so a data-entry error cannot create a
+      // coupon that discounts an arbitrarily large amount. 100 000 cents =
+      // $1 000.00; a legitimate single-order coupon should never exceed this.
+      return data.type !== 'fixed' || data.value <= 100_000;
+    },
+    {
+      message: 'A fixed coupon value may not exceed 100000 cents ($1,000.00).',
       path: ['value'],
     }
   );
